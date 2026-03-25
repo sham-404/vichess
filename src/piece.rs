@@ -1,13 +1,13 @@
 #[derive(Debug, Clone, Copy)]
 pub struct Piece {
     pub kind: PieceKind,
-    pub pos: (usize, usize),
+    pub pos: usize,
     pub name: char,
     pub color: Color,
 }
 
 impl Piece {
-    pub fn new(kind: PieceKind, pos: (usize, usize), color: Color) -> Self {
+    pub fn new(kind: PieceKind, pos: usize, color: Color) -> Self {
         let name = kind.get_name();
         Self { kind, pos, name, color }
     }
