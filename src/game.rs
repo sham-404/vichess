@@ -1,12 +1,12 @@
 use crate::piece::{Color, Piece, PieceKind};
 
 #[derive(Debug, Clone)]
-pub struct Board {
+pub struct Game {
     pub size: usize,
     pub board: Vec<Option<Piece>>,
 }
 
-impl Board {
+impl Game {
     pub fn setup_standard(&mut self) {
         let mut index: usize;
 
@@ -86,20 +86,5 @@ impl Board {
 
     fn idx(&self, row: usize, col: usize) -> usize {
         row * self.size + col
-    }
-
-    pub fn print_board(&self) {
-        println!("---------------");
-        for row in 0..self.size {
-            for col in 0..self.size {
-                match &self.board[self.idx(row, col)] {
-                    Some(piece) => print!("{} ", piece.kind.get_name()),
-                    None => print!(" "),
-                }
-            }
-            println!();
-        }
-
-        println!("---------------");
     }
 }
