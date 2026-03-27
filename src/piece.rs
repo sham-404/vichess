@@ -1,8 +1,8 @@
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone)]
 pub struct Piece {
     pub kind: PieceKind,
     pub pos: usize,
-    pub name: char,
+    pub name: String,
     pub color: Color,
 }
 
@@ -24,14 +24,14 @@ pub enum PieceKind {
 }
 
 impl PieceKind {
-    pub fn get_name(&self) -> char {
+    pub fn get_name(&self) -> String {
         match self {
-            Self::King => 'K',
-            Self::Queen => 'Q',
-            Self::Rook => 'R',
-            Self::Knight => 'N',
-            Self::Bishop => 'B',
-            Self::Pawn => 'P',
+            Self::King => "K".to_string(),
+            Self::Queen => "Q".to_string(),
+            Self::Rook => "R".to_string(),
+            Self::Knight => "N".to_string(),
+            Self::Bishop => "B".to_string(),
+            Self::Pawn => "P".to_string(),
         }
     }
 }
