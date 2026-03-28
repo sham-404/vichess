@@ -23,6 +23,8 @@ fn draw_board(game: &Game) {
         let row = idx / game.size;
         let col = idx % game.size;
 
+        let (x, y) = (col as f32, row as f32);
+
         let color = { if (row + col) % 2 == 0 { BLACK } else { WHITE } };
 
         if let Square::_NotExists = square {
@@ -30,8 +32,8 @@ fn draw_board(game: &Game) {
         }
 
         draw_rectangle(
-            row as f32 * tile_size,
-            col as f32 * tile_size,
+            x as f32 * tile_size,
+            y as f32 * tile_size,
             tile_size,
             tile_size,
             color,
@@ -40,9 +42,9 @@ fn draw_board(game: &Game) {
         if let Square::Occupied(piece) = square {
             draw_text(
                 &piece.name,
-                row as f32 * tile_size,
-                col as f32 * tile_size,
-                40.0,
+                x as f32 * tile_size,
+                y as f32 * tile_size + tile_size,
+                64.0,
                 GREEN,
             );
         }
