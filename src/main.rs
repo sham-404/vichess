@@ -2,12 +2,13 @@ mod game;
 mod piece;
 mod gui;
 
-use crate::game::Game;
+use crate::{game::Game, gui::GUI};
 
 #[macroquad::main("Chess")]
 async fn main() {
-    let mut board = Game::new(8);
-    board.setup_standard();
+    let mut game = Game::new(8);
+    game.setup_standard();
 
-    gui::run(board).await;
+    let mut ui = GUI::new(&game);
+    ui.run(&game).await;
 }

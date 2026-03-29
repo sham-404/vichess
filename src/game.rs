@@ -11,21 +11,30 @@ pub enum Square {
 pub struct Game {
     size: usize,
     board: Vec<Square>,
-    selected_piece: Option<Piece>,
 }
 
 impl Game {
     pub fn new(size: usize) -> Self {
         Self {
-            selected_piece: None,
             size: size,
             board: vec![Square::Empty; size * size],
         }
     }
 
+    pub fn get_xy(&self, idx: usize) -> (f32, f32) {
+        let row = idx / self.size;
+        let col = idx % self.size;
+
+        (col as f32, row as f32)
+    }
+
     pub fn board(&self) -> &Vec<Square> {
         &self.board
     }
+
+    // pub fn get_square(&self, x: usize, y: usize) -> &Square {
+    //     &self.board[self.idx(x, y)]
+    // }
 
     pub fn get_size(&self) -> usize {
         self.size
@@ -50,7 +59,6 @@ impl Game {
         index = self.idx(0, 7);
         piece = Piece::new(PieceKind::Rook, index, Color::White);
         self.board[index] = Square::Occupied(piece);
-
 
         // Knights
         index = self.idx(0, 1);
@@ -83,7 +91,7 @@ impl Game {
         for col in 0..self.size {
             index = self.idx(6, col);
             piece = Piece::new(PieceKind::Pawn, index, Color::Black);
-        self.board[index] = Square::Occupied(piece);
+            self.board[index] = Square::Occupied(piece);
         }
 
         // Rooks
@@ -120,7 +128,6 @@ impl Game {
         piece = Piece::new(PieceKind::Queen, index, Color::White);
         self.board[index] = Square::Occupied(piece);
     }
-
 
     fn idx(&self, row: usize, col: usize) -> usize {
         row * self.size + col
