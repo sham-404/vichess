@@ -1,4 +1,4 @@
-use crate::piece::{Color, Piece, PieceKind};
+use crate::piece::{Color, Piece, PieceKind, Pos};
 
 #[derive(Debug, Clone)]
 pub enum Square {
@@ -32,104 +32,57 @@ impl Game {
         &self.board
     }
 
-    // pub fn get_square(&self, x: usize, y: usize) -> &Square {
-    //     &self.board[self.idx(x, y)]
-    // }
-
     pub fn get_size(&self) -> usize {
         self.size
     }
 
     pub fn setup_standard(&mut self) {
-        let mut index: usize;
-        let mut piece: Piece;
-
-        // White pieces
         // Pawns
         for col in 0..self.size {
-            index = self.idx(1, col);
-            piece = Piece::new(PieceKind::Pawn, index, Color::White);
-            self.board[index] = Square::Occupied(piece);
+            let col = col as i32;
+
+            let white_pawn = Pos::new(1, col);
+            let black_pawn = Pos::new((self.size - 2) as i32, col);
+
+            self.set(
+                white_pawn,
+                Piece::new(PieceKind::Pawn, white_pawn, Color::White),
+            );
+            self.set(
+                black_pawn,
+                Piece::new(PieceKind::Pawn, black_pawn, Color::Black),
+            );
         }
 
-        // Rooks
-        index = self.idx(0, 0);
-        piece = Piece::new(PieceKind::Rook, index, Color::White);
-        self.board[index] = Square::Occupied(piece);
-        index = self.idx(0, 7);
-        piece = Piece::new(PieceKind::Rook, index, Color::White);
-        self.board[index] = Square::Occupied(piece);
+        // Back rank (order matters)
+        let back_rank = [
+            PieceKind::Rook,
+            PieceKind::Knight,
+            PieceKind::Bishop,
+            PieceKind::King,
+            PieceKind::Queen,
+            PieceKind::Bishop,
+            PieceKind::Knight,
+            PieceKind::Rook,
+        ];
 
-        // Knights
-        index = self.idx(0, 1);
-        piece = Piece::new(PieceKind::Knight, index, Color::White);
-        self.board[index] = Square::Occupied(piece);
-        index = self.idx(0, 6);
-        piece = Piece::new(PieceKind::Knight, index, Color::White);
-        self.board[index] = Square::Occupied(piece);
+        for (col, kind) in back_rank.iter().enumerate() {
+            let col = col as i32;
 
-        // Bishops
-        index = self.idx(0, 2);
-        piece = Piece::new(PieceKind::Bishop, index, Color::White);
-        self.board[index] = Square::Occupied(piece);
-        index = self.idx(0, 5);
-        piece = Piece::new(PieceKind::Bishop, index, Color::White);
-        self.board[index] = Square::Occupied(piece);
+            let white_pos = Pos::new(0, col);
+            let black_pos = Pos::new((self.size - 1) as i32, col);
 
-        // King
-        index = self.idx(0, 3);
-        piece = Piece::new(PieceKind::King, index, Color::White);
-        self.board[index] = Square::Occupied(piece);
-
-        // Queen
-        index = self.idx(0, 4);
-        piece = Piece::new(PieceKind::Queen, index, Color::White);
-        self.board[index] = Square::Occupied(piece);
-
-        // Black Pieces
-        // Pawns
-        for col in 0..self.size {
-            index = self.idx(6, col);
-            piece = Piece::new(PieceKind::Pawn, index, Color::Black);
-            self.board[index] = Square::Occupied(piece);
+            self.set(white_pos, Piece::new(*kind, white_pos, Color::White));
+            self.set(black_pos, Piece::new(*kind, black_pos, Color::Black));
         }
-
-        // Rooks
-        index = self.idx(7, 0);
-        piece = Piece::new(PieceKind::Rook, index, Color::White);
-        self.board[index] = Square::Occupied(piece);
-        index = self.idx(7, 7);
-        piece = Piece::new(PieceKind::Rook, index, Color::White);
-        self.board[index] = Square::Occupied(piece);
-
-        // Knights
-        index = self.idx(7, 1);
-        piece = Piece::new(PieceKind::Knight, index, Color::White);
-        self.board[index] = Square::Occupied(piece);
-        index = self.idx(7, 6);
-        piece = Piece::new(PieceKind::Knight, index, Color::White);
-        self.board[index] = Square::Occupied(piece);
-
-        // Bishops
-        index = self.idx(7, 2);
-        piece = Piece::new(PieceKind::Bishop, index, Color::White);
-        self.board[index] = Square::Occupied(piece);
-        index = self.idx(7, 5);
-        piece = Piece::new(PieceKind::Bishop, index, Color::White);
-        self.board[index] = Square::Occupied(piece);
-
-        // King
-        index = self.idx(7, 3);
-        piece = Piece::new(PieceKind::King, index, Color::White);
-        self.board[index] = Square::Occupied(piece);
-
-        // Queen
-        index = self.idx(7, 4);
-        piece = Piece::new(PieceKind::Queen, index, Color::White);
-        self.board[index] = Square::Occupied(piece);
     }
 
-    fn idx(&self, row: usize, col: usize) -> usize {
-        row * self.size + col
+    fn set(&mut self, pos: Pos, piece: Piece) {
+        let idx = self.idx(pos);
+        self.board[idx] = Square::Occupied(piece);
+    }
+
+    fn idx(&self, pos: Pos) -> usize {
+        (pos.row as usize) * self.size + (pos.col as usize)
     }
 }

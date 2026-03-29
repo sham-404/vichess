@@ -91,7 +91,7 @@ impl GUI {
             // Drawing pieces
             if let Square::Occupied(piece) = square {
                 draw_text(
-                    &piece.name,
+                    &piece.name(),
                     x as f32 * self.tile_size,
                     y as f32 * self.tile_size + self.tile_size,
                     64.0,
