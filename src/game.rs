@@ -9,11 +9,28 @@ pub enum Square {
 
 #[derive(Debug, Clone)]
 pub struct Game {
-    pub size: usize,
-    pub board: Vec<Square>,
+    size: usize,
+    board: Vec<Square>,
+    selected_piece: Option<Piece>,
 }
 
 impl Game {
+    pub fn new(size: usize) -> Self {
+        Self {
+            selected_piece: None,
+            size: size,
+            board: vec![Square::Empty; size * size],
+        }
+    }
+
+    pub fn board(&self) -> &Vec<Square> {
+        &self.board
+    }
+
+    pub fn get_size(&self) -> usize {
+        self.size
+    }
+
     pub fn setup_standard(&mut self) {
         let mut index: usize;
         let mut piece: Piece;
@@ -104,12 +121,6 @@ impl Game {
         self.board[index] = Square::Occupied(piece);
     }
 
-    pub fn new(size: usize) -> Self {
-        Self {
-            size: size,
-            board: vec![Square::Empty; size * size],
-        }
-    }
 
     fn idx(&self, row: usize, col: usize) -> usize {
         row * self.size + col
