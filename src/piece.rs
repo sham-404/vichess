@@ -1,3 +1,5 @@
+use crate::board::Board;
+
 #[derive(Debug, Copy, Clone)]
 pub struct Pos {
     pub row: i32,
@@ -7,6 +9,13 @@ pub struct Pos {
 impl Pos {
     pub fn new(row: i32, col: i32) -> Self {
         Self { row, col }
+    } 
+
+    pub fn offset(&self, dr: i32, dc: i32) -> Self {
+        Self {
+            row: self.row + dr,
+            col: self.col + dc,
+        }
     }
 }
 
@@ -51,6 +60,32 @@ impl PieceKind {
             Self::Bishop => "B".to_string(),
             Self::Pawn => "P".to_string(),
         }
+    }
+
+    fn king_moves(&self, king: Piece, board: Board) -> Vec<Pos> {
+        let mut moves: Vec<Pos> = Vec::new();
+
+        let offset = [
+            (1, 1),
+            (-1, 1),
+            (1, -1),
+            (-1, -1),
+            (1, 0),
+            (-1, 0),
+            (0, -1),
+            (0, 1),
+        ];
+
+        for (dr, dc) in offset {
+            let new_pos = king._pos.offset(dr, dc);
+
+            if !board.within_bounds(new_pos) {
+                continue;
+            }
+
+
+        }
+        moves
     }
 }
 

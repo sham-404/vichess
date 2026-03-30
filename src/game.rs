@@ -1,4 +1,5 @@
 use crate::piece::{Color, Piece, PieceKind, Pos};
+use crate::board::Board;
 
 #[derive(Debug, Clone)]
 pub enum Square {
@@ -7,20 +8,6 @@ pub enum Square {
     Occupied(Piece),
 }
 
-#[derive(Debug, Clone)]
-pub struct Board {
-    size: usize,
-    squares: Vec<Square>,
-}
-
-impl Board {
-    pub fn get_xy(&self, idx: usize) -> (f32, f32) {
-        let row = idx / self.size;
-        let col = idx % self.size;
-
-        (col as f32, row as f32)
-    }
-}
 
 #[derive(Debug, Clone)]
 pub struct Game {
@@ -29,11 +16,7 @@ pub struct Game {
 
 impl Game {
     pub fn new(size: usize) -> Self {
-        let board = Board {
-            size,
-            squares: vec![Square::Empty; size * size],
-        };
-        Self { board }
+        Self { board: Board::new(size) }
     }
 
     pub fn board(&self) -> &Board {
@@ -41,20 +24,20 @@ impl Game {
     }
 
     pub fn squares(&self) -> &[Square] {
-        &self.board.squares
+        &self.board.squares()
     }
 
     pub fn get_size(&self) -> usize {
-        self.board.size
+        self.board.get_size()
     }
 
     pub fn setup_standard(&mut self) {
         // Pawns
-        for col in 0..self.board.size {
+        for col in 0..self.board.get_size() {
             let col = col as i32;
 
             let white_pawn = Pos::new(1, col);
-            let black_pawn = Pos::new((self.board.size - 2) as i32, col);
+            let black_pawn = Pos::new((self.board.get_size() - 2) as i32, col);
 
             self.set(
                 white_pawn,
@@ -82,7 +65,7 @@ impl Game {
             let col = col as i32;
 
             let white_pos = Pos::new(0, col);
-            let black_pos = Pos::new((self.board.size - 1) as i32, col);
+            let black_pos = Pos::new((self.board.get_size() - 1) as i32, col);
 
             self.set(white_pos, Piece::new(*kind, white_pos, Color::White));
             self.set(black_pos, Piece::new(*kind, black_pos, Color::Black));
@@ -91,10 +74,10 @@ impl Game {
 
     fn set(&mut self, pos: Pos, piece: Piece) {
         let idx = self.idx(pos);
-        self.board.squares[idx] = Square::Occupied(piece);
+        self.board.place_piece(idx, piece);
     }
 
     fn idx(&self, pos: Pos) -> usize {
-        (pos.row as usize) * self.board.size + (pos.col as usize)
+        (pos.row as usize) * self.board.get_size() + (pos.col as usize)
     }
 }
