@@ -21,6 +21,7 @@ impl Game {
         }
     }
 
+
     pub fn get_xy(&self, idx: usize) -> (f32, f32) {
         let row = idx / self.size;
         let col = idx % self.size;
