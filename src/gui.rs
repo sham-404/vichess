@@ -17,7 +17,6 @@ impl GUI {
     }
 
     pub async fn run(&mut self, game: &Game) {
-        println!("{}", game.get_size());
         loop {
             clear_background(LIGHTGRAY);
             self.draw_board(&game);
@@ -35,8 +34,6 @@ impl GUI {
         let col = (x / self.tile_size) as usize;
         let row = (y / self.tile_size) as usize;
 
-        println!("{} {}", row, col);
-
         let idx = row * game.get_size() + col;
 
         if row < game.get_size() && col < game.get_size() {
@@ -51,8 +48,8 @@ impl GUI {
         self.tile_size = width.min(height) / game.get_size() as f32;
 
         // Draw Board states
-        for (idx, square) in game.board().iter().enumerate() {
-            let (x, y) = game.get_xy(idx);
+        for (idx, square) in game.squares().iter().enumerate() {
+            let (x, y) = game.board().get_xy(idx);
 
             let color = {
                 if (x + y) as usize % 2 == 0 {
@@ -86,8 +83,8 @@ impl GUI {
             }
         }
 
-        for (idx, square) in game.board().iter().enumerate() {
-            let (x, y) = game.get_xy(idx);
+        for (idx, square) in game.squares().iter().enumerate() {
+            let (x, y) = game.board().get_xy(idx);
             // Drawing pieces
             if let Square::Occupied(piece) = square {
                 draw_text(
