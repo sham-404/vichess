@@ -18,6 +18,10 @@ impl Board {
         self.size
     }
 
+    pub fn get(&self, pos: Pos) -> &Square {
+        &self.squares[self.idx(pos)]
+    }
+
     pub fn place_piece(&mut self, idx: usize, piece: Piece) {
         self.squares[idx] = Square::Occupied(piece);
     }
@@ -34,6 +38,10 @@ impl Board {
         pos.col >= 0 &&
         (pos.row as usize) < self.size &&
         (pos.col as usize) < self.size
+    }
+
+    fn idx(&self, pos: Pos) -> usize {
+        (pos.row as usize) * self.get_size() + (pos.col as usize)
     }
 
     pub fn get_row_col(&self, idx: usize) -> (f32, f32) {

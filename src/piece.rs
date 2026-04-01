@@ -1,4 +1,5 @@
 use crate::board::Board;
+use crate::game::Square;
 
 #[derive(Debug, Copy, Clone)]
 pub struct Pos {
@@ -9,7 +10,7 @@ pub struct Pos {
 impl Pos {
     pub fn new(row: i32, col: i32) -> Self {
         Self { row, col }
-    } 
+    }
 
     pub fn offset(&self, dr: i32, dc: i32) -> Self {
         Self {
@@ -21,22 +22,54 @@ impl Pos {
 
 #[derive(Debug, Clone)]
 pub struct Piece {
-    _kind: PieceKind,
-    _pos: Pos,
-    _color: Color,
+    kind: PieceKind,
+    pos: Pos,
+    color: Color,
 }
 
 impl Piece {
     pub fn new(kind: PieceKind, pos: Pos, color: Color) -> Self {
-        Self {
-            _kind: kind,
-            _pos: pos,
-            _color: color,
+        Self { kind, pos, color }
+    }
+
+    fn king_moves(&self, king: Piece, board: Board) -> Vec<Pos> {
+        let mut moves: Vec<Pos> = Vec::new();
+
+        let offset = [
+            (1, 1),
+            (-1, 1),
+            (1, -1),
+            (-1, -1),
+            (1, 0),
+            (-1, 0),
+            (0, -1),
+            (0, 1),
+        ];
+
+        for (dr, dc) in offset {
+            let new_pos = king.pos.offset(dr, dc);
+
+            if !board.within_bounds(new_pos) {
+                continue;
+            }
+
+            let square = board.get(new_pos);
+            match square {
+                Square::_NotExists => continue,
+                Square::Empty => moves.push(new_pos),
+                Square::Occupied(p) => {
+                    if p.color != self.color {
+                        moves.push(new_pos);
+                    }
+                }
+            }
         }
+
+        moves
     }
 
     pub fn name(&self) -> String {
-        self._kind.get_name()
+        self.kind.get_name()
     }
 }
 
@@ -61,35 +94,9 @@ impl PieceKind {
             Self::Pawn => "P".to_string(),
         }
     }
-
-    fn king_moves(&self, king: Piece, board: Board) -> Vec<Pos> {
-        let mut moves: Vec<Pos> = Vec::new();
-
-        let offset = [
-            (1, 1),
-            (-1, 1),
-            (1, -1),
-            (-1, -1),
-            (1, 0),
-            (-1, 0),
-            (0, -1),
-            (0, 1),
-        ];
-
-        for (dr, dc) in offset {
-            let new_pos = king._pos.offset(dr, dc);
-
-            if !board.within_bounds(new_pos) {
-                continue;
-            }
-
-
-        }
-        moves
-    }
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Color {
     White,
     Black,
