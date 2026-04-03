@@ -2,13 +2,13 @@ use macroquad::prelude::*;
 
 use crate::{
     game::{Game, Square},
-    piece::MyColor,
+    piece::{MyColor, Pos},
 };
 
 pub struct GUI {
     game: Game,
     tile_size: f32,
-    selected_square: Option<usize>,
+    selected_pos: Option<Pos>,
 }
 
 impl GUI {
@@ -16,7 +16,7 @@ impl GUI {
         let tile_size = screen_width().min(screen_height()) / game.get_size() as f32;
         Self {
             game: game,
-            selected_square: None,
+            selected_pos: None,
             tile_size,
         }
     }
@@ -39,10 +39,8 @@ impl GUI {
         let col = (x / self.tile_size) as usize;
         let row = (y / self.tile_size) as usize;
 
-        let idx = row * &self.game.get_size() + col;
-
         if row < self.game.get_size() && col < self.game.get_size() {
-            self.selected_square = Some(idx);
+            self.selected_pos = Some(Pos::new(row as i32, col as i32));
         }
     }
 
@@ -70,18 +68,21 @@ impl GUI {
 
             self.color_square(x, y, color);
 
-            // Drawing selected square
-            if self.selected_square.is_some() && idx == self.selected_square.unwrap() {
-                self.color_square(x, y, PINK);
+            //self.debug_square_drawing();
+        }
 
-                if let Square::Occupied(piece) = square {
-                    for pos in piece.get_piece_moves(self.game.board()) {
-                        self.color_square(pos.col as f32, pos.row as f32, GRAY);
-                    }
+        // Drawing selected square
+        if self.selected_pos.is_some() {
+            let square = self.selected_pos.unwrap();
+            let x = square.col;
+            let y = square.row;
+            self.color_square(x as f32, y as f32, PINK);
+
+            if let Square::Occupied(piece) = *self.game.board().get(square) {
+                for pos in piece.get_piece_moves(self.game.board()) {
+                    self.color_square(pos.col as f32, pos.row as f32, GRAY);
                 }
             }
-
-            //self.debug_square_drawing();
         }
 
         for (idx, square) in self.game.squares().iter().enumerate() {

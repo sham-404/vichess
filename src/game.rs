@@ -1,7 +1,7 @@
 use crate::board::Board;
 use crate::piece::{MyColor, Piece, PieceKind, Pos};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy)]
 pub enum Square {
     _NotExists,
     Empty,

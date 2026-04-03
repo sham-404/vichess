@@ -20,7 +20,7 @@ impl Pos {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy)]
 pub struct Piece {
     kind: PieceKind,
     pos: Pos,
