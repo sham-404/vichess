@@ -24,12 +24,20 @@ impl Pos {
 pub struct Piece {
     kind: PieceKind,
     pos: Pos,
-    color: Color,
+    color: MyColor,
 }
 
 impl Piece {
-    pub fn new(kind: PieceKind, pos: Pos, color: Color) -> Self {
+    pub fn new(kind: PieceKind, pos: Pos, color: MyColor) -> Self {
         Self { kind, pos, color }
+    }
+
+    pub fn name(&self) -> String {
+        self.kind.get_name()
+    }
+    
+    pub fn color(&self) -> MyColor {
+        self.color
     }
 
     pub fn get_piece_moves(&self, board: &Board) -> Vec<Pos> {
@@ -42,25 +50,30 @@ impl Piece {
     }
 
     fn get_pawn_dir(pawn: &Piece) -> i32 {
-        if pawn.color == Color::White {
-            return -1;
+        if pawn.color == MyColor::White {
+            return 1;
         }
-        1
+        -1
     }
 
     fn pawn_moves(&self, board: &Board) -> Vec<Pos> {
         let mut moves: Vec<Pos> = Vec::new();
         let dir = Self::get_pawn_dir(&self);
-        let new_pos = self.pos.offset(0, dir);
+        let new_pos = self.pos.offset(dir, 0);
 
-        if board.within_bounds(&new_pos) && matches!(board.get(new_pos), Square::Empty) {
-            moves.push(new_pos);
+        if board.within_bounds(&new_pos) {
+            if matches!(board.get(new_pos), &Square::Empty) {
+                moves.push(new_pos);
+            }
         }
 
-        let new_pos = self.pos.offset(0, dir * 2);
+        let new_pos = self.pos.offset(dir * 2, 0);
 
-        if board.within_bounds(&new_pos) && matches!(board.get(new_pos), Square::Empty) {
-            moves.push(new_pos);
+        println!("hi {:?}", new_pos);
+        if board.within_bounds(&new_pos) {
+            if matches!(board.get(new_pos), &Square::Empty) {
+                moves.push(new_pos);
+            }
         }
 
         moves
@@ -101,10 +114,6 @@ impl Piece {
 
         moves
     }
-
-    pub fn name(&self) -> String {
-        self.kind.get_name()
-    }
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -131,7 +140,7 @@ impl PieceKind {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum Color {
+pub enum MyColor {
     White,
     Black,
 }

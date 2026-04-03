@@ -1,5 +1,5 @@
 use crate::board::Board;
-use crate::piece::{Color, Piece, PieceKind, Pos};
+use crate::piece::{MyColor, Piece, PieceKind, Pos};
 
 #[derive(Debug, Clone)]
 pub enum Square {
@@ -42,11 +42,11 @@ impl Game {
 
             self.set(
                 white_pawn,
-                Piece::new(PieceKind::Pawn, white_pawn, Color::White),
+                Piece::new(PieceKind::Pawn, white_pawn, MyColor::White),
             );
             self.set(
                 black_pawn,
-                Piece::new(PieceKind::Pawn, black_pawn, Color::Black),
+                Piece::new(PieceKind::Pawn, black_pawn, MyColor::Black),
             );
         }
 
@@ -68,8 +68,8 @@ impl Game {
             let white_pos = Pos::new(0, col);
             let black_pos = Pos::new((self.board.get_size() - 1) as i32, col);
 
-            self.set(white_pos, Piece::new(*kind, white_pos, Color::White));
-            self.set(black_pos, Piece::new(*kind, black_pos, Color::Black));
+            self.set(white_pos, Piece::new(*kind, white_pos, MyColor::White));
+            self.set(black_pos, Piece::new(*kind, black_pos, MyColor::Black));
         }
     }
 
