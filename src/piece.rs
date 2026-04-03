@@ -69,7 +69,6 @@ impl Piece {
 
         let new_pos = self.pos.offset(dir * 2, 0);
 
-        println!("hi {:?}", new_pos);
         if board.within_bounds(&new_pos) {
             if matches!(board.get(new_pos), &Square::Empty) {
                 moves.push(new_pos);

@@ -44,13 +44,6 @@ impl Board {
         (pos.row as usize) * self.get_size() + (pos.col as usize)
     }
 
-    pub fn get_row_col(&self, idx: usize) -> (f32, f32) {
-        let (col, row) = self.get_xy(idx);
-
-        (row, col)
-
-    }
-
     pub fn squares(&self) -> &[Square] {
         &self.squares
     }

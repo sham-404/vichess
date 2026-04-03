@@ -15,9 +15,11 @@ pub struct Game {
 
 impl Game {
     pub fn new(size: usize) -> Self {
-        Self {
+        let game = Self {
             board: Board::new(size),
-        }
+        };
+        game.generate_moves();
+        game
     }
 
     pub fn board(&self) -> &Board {
