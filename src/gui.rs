@@ -63,24 +63,13 @@ impl GUI {
                 continue;
             }
 
-            draw_rectangle(
-                x as f32 * self.tile_size,
-                y as f32 * self.tile_size,
-                self.tile_size,
-                self.tile_size,
-                color,
-            );
+            self.color_square(x, y, color);
 
             // Drawing selected square
             if self.selected_square.is_some() && idx == self.selected_square.unwrap() {
-                draw_rectangle(
-                    x as f32 * self.tile_size,
-                    y as f32 * self.tile_size,
-                    self.tile_size,
-                    self.tile_size,
-                    PINK,
-                );
+                self.color_square(x, y, PINK);
             }
+            self.debug_square_drawing();
         }
 
         for (idx, square) in game.squares().iter().enumerate() {
@@ -96,5 +85,17 @@ impl GUI {
                 );
             }
         }
+    }
+
+    fn debug_square_drawing(&self) {}
+
+    fn color_square(&self, x: f32, y: f32, color: Color) {
+        draw_rectangle(
+            x as f32 * self.tile_size,
+            y as f32 * self.tile_size,
+            self.tile_size,
+            self.tile_size,
+            color,
+        );
     }
 }

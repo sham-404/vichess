@@ -1,5 +1,5 @@
-use crate::piece::{Color, Piece, PieceKind, Pos};
 use crate::board::Board;
+use crate::piece::{Color, Piece, PieceKind, Pos};
 
 #[derive(Debug, Clone)]
 pub enum Square {
@@ -8,7 +8,6 @@ pub enum Square {
     Occupied(Piece),
 }
 
-
 #[derive(Debug, Clone)]
 pub struct Game {
     board: Board,
@@ -16,7 +15,9 @@ pub struct Game {
 
 impl Game {
     pub fn new(size: usize) -> Self {
-        Self { board: Board::new(size) }
+        Self {
+            board: Board::new(size),
+        }
     }
 
     pub fn board(&self) -> &Board {
@@ -69,6 +70,15 @@ impl Game {
 
             self.set(white_pos, Piece::new(*kind, white_pos, Color::White));
             self.set(black_pos, Piece::new(*kind, black_pos, Color::Black));
+        }
+    }
+
+    fn generate_moves(&self) {
+        for square in self.board.squares() {
+            match square {
+                Square::Occupied(piece) => _ = piece.get_piece_moves(&self.board),
+                _ => continue,
+            }
         }
     }
 

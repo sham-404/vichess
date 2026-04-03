@@ -32,7 +32,41 @@ impl Piece {
         Self { kind, pos, color }
     }
 
-    fn king_moves(&self, king: Piece, board: Board) -> Vec<Pos> {
+    pub fn get_piece_moves(&self, board: &Board) -> Vec<Pos> {
+        let moves = match self.kind {
+            PieceKind::Pawn => self.pawn_moves(board),
+            PieceKind::King => self.king_moves(board),
+            _ => Vec::<Pos>::new(),
+        };
+        moves
+    }
+
+    fn get_pawn_dir(pawn: &Piece) -> i32 {
+        if pawn.color == Color::White {
+            return -1;
+        }
+        1
+    }
+
+    fn pawn_moves(&self, board: &Board) -> Vec<Pos> {
+        let mut moves: Vec<Pos> = Vec::new();
+        let dir = Self::get_pawn_dir(&self);
+        let new_pos = self.pos.offset(0, dir);
+
+        if board.within_bounds(&new_pos) && matches!(board.get(new_pos), Square::Empty) {
+            moves.push(new_pos);
+        }
+
+        let new_pos = self.pos.offset(0, dir * 2);
+
+        if board.within_bounds(&new_pos) && matches!(board.get(new_pos), Square::Empty) {
+            moves.push(new_pos);
+        }
+
+        moves
+    }
+
+    fn king_moves(&self, board: &Board) -> Vec<Pos> {
         let mut moves: Vec<Pos> = Vec::new();
 
         let offset = [
@@ -47,9 +81,9 @@ impl Piece {
         ];
 
         for (dr, dc) in offset {
-            let new_pos = king.pos.offset(dr, dc);
+            let new_pos = self.pos.offset(dr, dc);
 
-            if !board.within_bounds(new_pos) {
+            if !board.within_bounds(&new_pos) {
                 continue;
             }
 

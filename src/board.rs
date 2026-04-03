@@ -33,7 +33,7 @@ impl Board {
         (col as f32, row as f32)
     }
 
-    pub fn within_bounds(&self, pos: Pos) -> bool {
+    pub fn within_bounds(&self, pos: &Pos) -> bool {
         pos.row >= 0 &&
         pos.col >= 0 &&
         (pos.row as usize) < self.size &&
