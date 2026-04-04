@@ -51,8 +51,7 @@ impl Piece {
             PieceKind::Queen => self.queen_moves(board),
             PieceKind::Bishop => self.bishop_moves(board),
             PieceKind::Rook => self.rook_moves(board),
-
-            _ => Vec::<Pos>::new(),
+            PieceKind::Knight => self.knight_moves(board),
         };
         moves
     }
@@ -185,6 +184,43 @@ impl Piece {
         ];
 
         let moves = self.sliding_moves(board, &dir);
+        moves
+    }
+
+    fn knight_moves(&self, board: &Board) -> Vec<Pos> {
+        let mut moves: Vec<Pos> = Vec::new();
+
+        let offset = [
+            (2, 1),
+            (2, -1),
+            (-2, 1),
+            (-2, -1),
+            (1, 2),
+            (-1, 2),
+            (1, -2),
+            (-1, -2),
+        ];
+
+
+        for (dr, dc) in offset {
+            let new_pos = self.pos.offset(dr, dc);
+
+            if !board.within_bounds(&new_pos) {
+                continue;
+            }
+
+            let square = board.peek(new_pos);
+            match square {
+                Square::_NotExists => continue,
+                Square::Empty => moves.push(new_pos),
+                Square::Occupied(p) => {
+                    if p.color != self.color {
+                        moves.push(new_pos);
+                    }
+                }
+            }
+        }
+
         moves
     }
 }
