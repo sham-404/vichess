@@ -75,6 +75,33 @@ impl Game {
         }
     }
 
+    pub fn make_move(&mut self, from: Pos, to: Pos) -> bool {
+        let square = self.board.peek(from);
+        if let Square::Occupied(piece) = square {
+            if !piece.get_piece_moves(&self.board).contains(&to) {
+                return false;
+            }
+        } else {
+            return false;
+        } // filters if it is not a valid move
+
+        let square = self.board.get(from);
+        if let Square::Occupied(piece) = square {
+            piece.change_pos(to);
+        }
+
+        let square = std::mem::replace(square, Square::Empty);
+        self.board.place(square, to);
+
+        // Post move activities
+        self.generate_moves();
+
+        // Debugging area
+        // self.board().print_cli_board();
+
+        true
+    }
+
     fn generate_moves(&self) {
         for square in self.board.squares() {
             match square {

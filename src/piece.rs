@@ -1,7 +1,7 @@
 use crate::board::Board;
 use crate::game::Square;
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub struct Pos {
     pub row: i32,
     pub col: i32,
@@ -35,9 +35,13 @@ impl Piece {
     pub fn name(&self) -> String {
         self.kind.get_name()
     }
-    
+
     pub fn color(&self) -> MyColor {
         self.color
+    }
+
+    pub fn change_pos(&mut self, to: Pos) {
+        self.pos = to;
     }
 
     pub fn get_piece_moves(&self, board: &Board) -> Vec<Pos> {
@@ -62,7 +66,7 @@ impl Piece {
         let new_pos = self.pos.offset(dir, 0);
 
         if board.within_bounds(&new_pos) {
-            if matches!(board.get(new_pos), &Square::Empty) {
+            if matches!(board.peek(new_pos), Square::Empty) {
                 moves.push(new_pos);
             }
         }
@@ -70,7 +74,7 @@ impl Piece {
         let new_pos = self.pos.offset(dir * 2, 0);
 
         if board.within_bounds(&new_pos) {
-            if matches!(board.get(new_pos), &Square::Empty) {
+            if matches!(board.peek(new_pos), Square::Empty) {
                 moves.push(new_pos);
             }
         }
@@ -99,7 +103,7 @@ impl Piece {
                 continue;
             }
 
-            let square = board.get(new_pos);
+            let square = board.peek(new_pos);
             match square {
                 Square::_NotExists => continue,
                 Square::Empty => moves.push(new_pos),

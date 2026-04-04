@@ -39,8 +39,23 @@ impl GUI {
         let col = (x / self.tile_size) as usize;
         let row = (y / self.tile_size) as usize;
 
-        if row < self.game.get_size() && col < self.game.get_size() {
-            self.selected_pos = Some(Pos::new(row as i32, col as i32));
+        let new_pos = Pos::new(row as i32, col as i32);
+
+        if !self.game.board().within_bounds(&new_pos) {
+            return;
+        }
+
+        match self.selected_pos {
+            Some(pos) => {
+                if !matches!(self.game.board().peek(new_pos), Square::_NotExists) {
+                    if self.game.make_move(pos, new_pos) {
+                        self.selected_pos = None;
+                    } else {
+                        self.selected_pos = Some(new_pos);
+                    }
+                }
+            }
+            None => self.selected_pos = Some(new_pos),
         }
     }
 
@@ -78,8 +93,10 @@ impl GUI {
             let y = square.row;
             self.color_square(x as f32, y as f32, PINK);
 
-            if let Square::Occupied(piece) = *self.game.board().get(square) {
-                for pos in piece.get_piece_moves(self.game.board()) {
+            // Drawing possible movements for selected piece if any
+            if let Square::Occupied(piece) = &self.game.board().peek(square) {
+                let moves = piece.get_piece_moves(self.game.board());
+                for pos in moves.iter() {
                     self.color_square(pos.col as f32, pos.row as f32, GRAY);
                 }
             }
@@ -110,7 +127,8 @@ impl GUI {
                     continue;
                 }
 
-                for pos in piece.get_piece_moves(self.game.board()) {
+                let moves = piece.get_piece_moves(self.game.board());
+                for pos in moves.iter() {
                     self.color_square(pos.col as f32, pos.row as f32, GRAY);
                 }
             }
