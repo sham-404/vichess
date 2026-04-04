@@ -49,6 +49,9 @@ impl Piece {
             PieceKind::Pawn => self.pawn_moves(board),
             PieceKind::King => self.king_moves(board),
             PieceKind::Queen => self.queen_moves(board),
+            PieceKind::Bishop => self.bishop_moves(board),
+            PieceKind::Rook => self.rook_moves(board),
+
             _ => Vec::<Pos>::new(),
         };
         moves
@@ -167,6 +170,18 @@ impl Piece {
             (1, -1),
             (-1, 1),
             (-1, -1),
+        ];
+
+        let moves = self.sliding_moves(board, &dir);
+        moves
+    }
+
+    fn rook_moves(&self, board: &Board) -> Vec<Pos> {
+        let dir = [
+            (1, 0),
+            (-1, 0),
+            (0, 1),
+            (0, -1),
         ];
 
         let moves = self.sliding_moves(board, &dir);
