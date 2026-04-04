@@ -48,8 +48,35 @@ impl Piece {
         let moves = match self.kind {
             PieceKind::Pawn => self.pawn_moves(board),
             PieceKind::King => self.king_moves(board),
+            PieceKind::Queen => self.queen_moves(board),
             _ => Vec::<Pos>::new(),
         };
+        moves
+    }
+
+    fn sliding_moves(&self, board: &Board, dir: &[(i32, i32)]) -> Vec<Pos> {
+        let mut moves: Vec<Pos> = Vec::new();
+        for &(dr, dc) in dir {
+            for i in 1..board.get_size() as i32 {
+                let new_pos = self.pos.offset(dr * i, dc * i);
+
+                if !board.within_bounds(&new_pos) {
+                    break;
+                }
+
+                let square = board.peek(new_pos);
+                match square {
+                    Square::Empty => moves.push(new_pos),
+                    Square::Occupied(piece) => {
+                        if self.color != piece.color {
+                            moves.push(new_pos);
+                        }
+                        break;
+                    }
+                    Square::_NotExists => {}
+                }
+            }
+        }
         moves
     }
 
@@ -115,6 +142,22 @@ impl Piece {
             }
         }
 
+        moves
+    }
+
+    fn queen_moves(&self, board: &Board) -> Vec<Pos> {
+        let dir = [
+            (1, 1),
+            (-1, 1),
+            (1, -1),
+            (-1, -1),
+            (1, 0),
+            (-1, 0),
+            (0, -1),
+            (0, 1),
+        ];
+
+        let moves = self.sliding_moves(board, &dir);
         moves
     }
 }
