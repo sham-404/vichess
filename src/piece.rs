@@ -160,6 +160,18 @@ impl Piece {
         let moves = self.sliding_moves(board, &dir);
         moves
     }
+
+    fn bishop_moves(&self, board: &Board) -> Vec<Pos> {
+        let dir = [
+            (1, 1),
+            (1, -1),
+            (-1, 1),
+            (-1, -1),
+        ];
+
+        let moves = self.sliding_moves(board, &dir);
+        moves
+    }
 }
 
 #[derive(Debug, Clone, Copy)]
