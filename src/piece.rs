@@ -89,6 +89,24 @@ impl Piece {
         -1
     }
 
+    fn has_pawn_moved(&self, pawn: &Piece) -> bool {
+        let mut moved = true;
+        match pawn.color {
+            MyColor::White => {
+                if pawn.pos.row == 1 {
+                    moved = false
+                }
+            }
+
+            MyColor::Black => {
+                if pawn.pos.row == 6 {
+                    moved = false
+                }
+            }
+        }
+        moved
+    }
+
     fn pawn_moves(&self, board: &Board) -> Vec<Pos> {
         let mut moves: Vec<Pos> = Vec::new();
         let dir = Self::get_pawn_dir(&self);
@@ -97,9 +115,18 @@ impl Piece {
         if board.within_bounds(&new_pos) {
             if matches!(board.peek(new_pos), Square::Empty) {
                 moves.push(new_pos);
+            } else {
+                return moves;
             }
+        } else {
+            return moves;
         }
 
+        if self.has_pawn_moved(self) {
+            return moves;
+        }
+
+        // Second step if pawn hasn't moved yet
         let new_pos = self.pos.offset(dir * 2, 0);
 
         if board.within_bounds(&new_pos) {
@@ -164,24 +191,14 @@ impl Piece {
     }
 
     fn bishop_moves(&self, board: &Board) -> Vec<Pos> {
-        let dir = [
-            (1, 1),
-            (1, -1),
-            (-1, 1),
-            (-1, -1),
-        ];
+        let dir = [(1, 1), (1, -1), (-1, 1), (-1, -1)];
 
         let moves = self.sliding_moves(board, &dir);
         moves
     }
 
     fn rook_moves(&self, board: &Board) -> Vec<Pos> {
-        let dir = [
-            (1, 0),
-            (-1, 0),
-            (0, 1),
-            (0, -1),
-        ];
+        let dir = [(1, 0), (-1, 0), (0, 1), (0, -1)];
 
         let moves = self.sliding_moves(board, &dir);
         moves
@@ -200,7 +217,6 @@ impl Piece {
             (1, -2),
             (-1, -2),
         ];
-
 
         for (dr, dc) in offset {
             let new_pos = self.pos.offset(dr, dc);

@@ -26,7 +26,7 @@ impl Board {
         &mut self.squares[idx]
     }
 
-    pub fn peek(&self, pos:Pos) -> &Square {
+    pub fn peek(&self, pos: Pos) -> &Square {
         &self.squares[self.idx(pos)]
     }
 
@@ -48,8 +48,13 @@ impl Board {
 
     pub fn within_bounds(&self, pos: &Pos) -> bool {
         pos.row >= 0
-            && pos.col >= 0 && (pos.row as usize) < self.size
+            && pos.col >= 0
+            && (pos.row as usize) < self.size
             && (pos.col as usize) < self.size
+    }
+
+    pub fn squares(&self) -> &[Square] {
+        &self.squares
     }
 
     #[allow(dead_code)]
@@ -71,9 +76,5 @@ impl Board {
 
     fn idx(&self, pos: Pos) -> usize {
         (pos.row as usize) * self.get_size() + (pos.col as usize)
-    }
-
-    pub fn squares(&self) -> &[Square] {
-        &self.squares
     }
 }
