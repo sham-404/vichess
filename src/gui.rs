@@ -88,14 +88,14 @@ impl GUI {
 
         // Drawing selected square
         if self.selected_pos.is_some() {
-            let square = self.selected_pos.unwrap();
-            let x = square.col;
-            let y = square.row;
+            let pos = self.selected_pos.unwrap();
+            let x = pos.col;
+            let y = pos.row;
             self.color_square(x as f32, y as f32, PINK);
 
             // Drawing possible movements for selected piece if any
-            if let Square::Occupied(piece) = &self.game.board().peek(square) {
-                let moves = &self.game.get_piece_moves(piece);
+            if let Square::Occupied(piece) = &self.game.board().peek(pos) {
+                let moves = &self.game.get_piece_moves(piece, pos);
                 for pos in moves.iter() {
                     self.color_square(pos.col as f32, pos.row as f32, GRAY);
                 }
@@ -121,13 +121,14 @@ impl GUI {
     fn debug_square_drawing(&self) {
         // possible piece movements
 
-        for square in self.game.squares().iter() {
+        for (idx, square) in self.game.squares().iter().enumerate() {
             if let Square::Occupied(piece) = square {
                 if piece.color() == MyColor::White {
                     continue;
                 }
+                let pos = self.game.idx_to_pos(idx);
 
-                let moves = self.game.get_piece_moves(piece);
+                let moves = self.game.get_piece_moves(piece, pos);
                 for pos in moves.iter() {
                     self.color_square(pos.col as f32, pos.row as f32, GRAY);
                 }

@@ -20,13 +20,12 @@ impl Pos {
 #[derive(Debug, Clone, Copy)]
 pub struct Piece {
     pub kind: PieceKind,
-    pub pos: Pos,
     pub color: MyColor,
 }
 
 impl Piece {
-    pub fn new(kind: PieceKind, pos: Pos, color: MyColor) -> Self {
-        Self { kind, pos, color }
+    pub fn new(kind: PieceKind, color: MyColor) -> Self {
+        Self { kind, color }
     }
 
     pub fn name(&self) -> String {
@@ -36,12 +35,6 @@ impl Piece {
     pub fn color(&self) -> MyColor {
         self.color
     }
-
-    pub fn change_pos(&mut self, to: Pos) {
-        self.pos = to;
-    }
-
-
 }
 
 #[derive(Debug, Clone, Copy)]
