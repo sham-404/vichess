@@ -95,7 +95,7 @@ impl GUI {
 
             // Drawing possible movements for selected piece if any
             if let Square::Occupied(piece) = &self.game.board().peek(square) {
-                let moves = piece.get_piece_moves(self.game.board());
+                let moves = &self.game.get_piece_moves(piece);
                 for pos in moves.iter() {
                     self.color_square(pos.col as f32, pos.row as f32, GRAY);
                 }
@@ -127,7 +127,7 @@ impl GUI {
                     continue;
                 }
 
-                let moves = piece.get_piece_moves(self.game.board());
+                let moves = self.game.get_piece_moves(piece);
                 for pos in moves.iter() {
                     self.color_square(pos.col as f32, pos.row as f32, GRAY);
                 }
