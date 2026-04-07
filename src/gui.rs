@@ -25,6 +25,7 @@ impl GUI {
         loop {
             clear_background(LIGHTGRAY);
             self.draw_board();
+            self.draw_pieces();
             self.handle_clicks();
             next_frame().await;
         }
@@ -39,11 +40,16 @@ impl GUI {
         let col = (x / self.tile_size) as usize;
         let row = (y / self.tile_size) as usize;
 
+        if col > self.game.get_size() - 1 || row > self.game.get_size() - 1 {
+            return;
+        }
+
         let new_pos = self.game.board().idx(row as i32, col as i32);
 
         if !self.game.board().within_bounds(new_pos) {
             return;
         }
+        
 
         match self.selected_pos {
             Some(pos) => {
@@ -100,7 +106,9 @@ impl GUI {
                 }
             }
         }
+    }
 
+    fn draw_pieces(&self) {
         for (idx, square) in self.game.squares().iter().enumerate() {
             let (x, y) = self.game.board().get_xy(idx);
             // Drawing pieces

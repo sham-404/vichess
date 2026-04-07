@@ -45,7 +45,7 @@ impl Board {
     }
 
     pub fn within_bounds(&self, pos: usize) -> bool {
-        pos < self.size - 1
+        pos < self.size * self.size
     }
 
     pub fn squares(&self) -> &[Square] {
