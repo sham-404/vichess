@@ -1,21 +1,21 @@
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
-pub struct Pos {
-    pub row: i32,
-    pub col: i32,
-}
-
-impl Pos {
-    pub fn new(row: i32, col: i32) -> Self {
-        Self { row, col }
-    }
-
-    pub fn offset(&self, dr: i32, dc: i32) -> Self {
-        Self {
-            row: self.row + dr,
-            col: self.col + dc,
-        }
-    }
-}
+// #[derive(Debug, Copy, Clone, PartialEq, Eq)]
+// pub struct Pos {
+//     pub row: i32,
+//     pub col: i32,
+// }
+//
+// impl Pos {
+//     pub fn new(row: i32, col: i32) -> Self {
+//         Self { row, col }
+//     }
+//
+//     pub fn offset(&self, dr: i32, dc: i32) -> Self {
+//         Self {
+//             row: self.row + dr,
+//             col: self.col + dc,
+//         }
+//     }
+// }
 
 #[derive(Debug, Clone, Copy)]
 pub struct Piece {

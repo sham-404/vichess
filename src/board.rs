@@ -1,6 +1,6 @@
 use crate::{
     game::Square,
-    piece::{Piece, Pos},
+    piece::{Piece},
 };
 
 #[derive(Debug, Clone)]
@@ -21,18 +21,16 @@ impl Board {
         self.size
     }
 
-    pub fn get(&mut self, pos: Pos) -> &mut Square {
-        let idx = self.idx(pos);
-        &mut self.squares[idx]
+    pub fn get(&mut self, pos:usize) -> &mut Square {
+        &mut self.squares[pos]
     }
 
-    pub fn peek(&self, pos: Pos) -> &Square {
-        &self.squares[self.idx(pos)]
+    pub fn peek(&self, pos:usize) -> &Square {
+        &self.squares[pos]
     }
 
-    pub fn place(&mut self, square: Square, pos: Pos) {
-        let idx = self.idx(pos);
-        self.squares[idx] = square;
+    pub fn place(&mut self, square: Square, pos:usize) {
+        self.squares[pos] = square;
     }
 
     pub fn place_piece(&mut self, idx: usize, piece: Piece) {
@@ -46,11 +44,8 @@ impl Board {
         (col as f32, row as f32)
     }
 
-    pub fn within_bounds(&self, pos: &Pos) -> bool {
-        pos.row >= 0
-            && pos.col >= 0
-            && (pos.row as usize) < self.size
-            && (pos.col as usize) < self.size
+    pub fn within_bounds(&self, pos: usize) -> bool {
+        pos < self.size - 1
     }
 
     pub fn squares(&self) -> &[Square] {
@@ -74,7 +69,7 @@ impl Board {
         println!("---------------");
     }
 
-    fn idx(&self, pos: Pos) -> usize {
-        (pos.row as usize) * self.get_size() + (pos.col as usize)
+    pub fn idx(&self, row: i32, col: i32) -> usize {
+        (row as usize) * self.get_size() + (col as usize)
     }
 }

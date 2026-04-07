@@ -2,13 +2,13 @@ use macroquad::prelude::*;
 
 use crate::{
     game::{Game, Square},
-    piece::{MyColor, Pos},
+    piece::MyColor,
 };
 
 pub struct GUI {
     game: Game,
     tile_size: f32,
-    selected_pos: Option<Pos>,
+    selected_pos: Option<usize>,
 }
 
 impl GUI {
@@ -39,9 +39,9 @@ impl GUI {
         let col = (x / self.tile_size) as usize;
         let row = (y / self.tile_size) as usize;
 
-        let new_pos = Pos::new(row as i32, col as i32);
+        let new_pos = self.game.board().idx(row as i32, col as i32);
 
-        if !self.game.board().within_bounds(&new_pos) {
+        if !self.game.board().within_bounds(new_pos) {
             return;
         }
 
@@ -89,15 +89,14 @@ impl GUI {
         // Drawing selected square
         if self.selected_pos.is_some() {
             let pos = self.selected_pos.unwrap();
-            let x = pos.col;
-            let y = pos.row;
+            let (x, y) = self.game.board().get_xy(pos);
             self.color_square(x as f32, y as f32, PINK);
 
             // Drawing possible movements for selected piece if any
             if let Square::Occupied(piece) = &self.game.board().peek(pos) {
                 let moves = &self.game.get_piece_moves(piece, pos);
-                for pos in moves.iter() {
-                    self.color_square(pos.col as f32, pos.row as f32, GRAY);
+                for &pos in moves.iter() {
+                    self.color_square(self.game.col(pos) as f32, self.game.row(pos) as f32, GRAY);
                 }
             }
         }
@@ -126,11 +125,10 @@ impl GUI {
                 if piece.color() == MyColor::White {
                     continue;
                 }
-                let pos = self.game.idx_to_pos(idx);
 
-                let moves = self.game.get_piece_moves(piece, pos);
-                for pos in moves.iter() {
-                    self.color_square(pos.col as f32, pos.row as f32, GRAY);
+                let moves = self.game.get_piece_moves(piece, idx);
+                for &pos in moves.iter() {
+                    self.color_square(self.game.col(pos) as f32, self.game.row(pos) as f32, GRAY);
                 }
             }
         }
