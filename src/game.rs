@@ -1,5 +1,5 @@
 use crate::board::Board;
-use crate::piece::{MyColor, Piece, PieceKind};
+use crate::piece::{PieceColor, Piece, PieceKind};
 
 #[derive(Debug, Clone, Copy)]
 pub enum Square {
@@ -42,8 +42,8 @@ impl Game {
             let white_pawn = self.board.idx(1, col);
             let black_pawn = self.board().idx((self.board().get_size() - 2) as i32, col);
 
-            self.set(white_pawn, Piece::new(PieceKind::Pawn, MyColor::White));
-            self.set(black_pawn, Piece::new(PieceKind::Pawn, MyColor::Black));
+            self.set(white_pawn, Piece::new(PieceKind::Pawn, PieceColor::White));
+            self.set(black_pawn, Piece::new(PieceKind::Pawn, PieceColor::Black));
         }
 
         // Back rank (order matters)
@@ -64,21 +64,9 @@ impl Game {
             let white_pos = self.board.idx(0, col);
             let black_pos = self.board().idx((self.board().get_size() - 1) as i32, col);
 
-            self.set(white_pos, Piece::new(*kind, MyColor::White));
-            self.set(black_pos, Piece::new(*kind, MyColor::Black));
+            self.set(white_pos, Piece::new(*kind, PieceColor::White));
+            self.set(black_pos, Piece::new(*kind, PieceColor::Black));
         }
-    }
-
-    pub fn get_piece_moves(&self, piece: &Piece, pos: usize) -> Vec<usize> {
-        let moves = match piece.kind {
-            PieceKind::Pawn => self.pawn_moves(piece, pos),
-            PieceKind::King => self.king_moves(piece, pos),
-            PieceKind::Queen => self.queen_moves(piece, pos),
-            PieceKind::Bishop => self.bishop_moves(piece, pos),
-            PieceKind::Rook => self.rook_moves(piece, pos),
-            PieceKind::Knight => self.knight_moves(piece, pos),
-        };
-        moves
     }
 
     pub fn is_valid_step(from: i32, to: i32, dir: i32) -> bool {
@@ -105,7 +93,8 @@ impl Game {
         }
     }
 
-    fn directional_moves(&self, piece: &Piece, pos: usize, dir: &[i32]) -> Vec<usize> {
+    fn gen_dir_moves(&self, piece: &Piece, pos: usize) -> Vec<usize> {
+        let dir = piece.kind.get_dir();
         let board = &self.board;
         let mut moves: Vec<usize> = Vec::new();
         for &di in dir {
@@ -139,7 +128,14 @@ impl Game {
         moves
     }
 
-    fn pawn_moves(&self, piece: &Piece, pos: usize) -> Vec<usize> {
+    pub fn get_moves(&self, piece: &Piece, pos: usize) -> Vec<usize> {
+        match piece.kind {
+            PieceKind::Pawn => self.gen_pawn_moves(piece, pos),
+            _ => self.gen_dir_moves(piece, pos),
+        }
+    }
+
+    fn gen_pawn_moves(&self, piece: &Piece, pos: usize) -> Vec<usize> {
         let mut moves = Vec::new();
 
         let pos = pos as i32;
@@ -147,8 +143,8 @@ impl Game {
         let rank = pos / 8;
 
         let (forward, start_rank, captures) = match piece.color() {
-            MyColor::White => (8, 1, [7, 9]),
-            MyColor::Black => (-8, 6, [-7, -9]),
+            PieceColor::White => (8, 1, [7, 9]),
+            PieceColor::Black => (-8, 6, [-7, -9]),
         };
 
         // 1. Single forward movement
@@ -200,42 +196,10 @@ impl Game {
         moves
     }
 
-    fn king_moves(&self, piece: &Piece, pos: usize) -> Vec<usize> {
-        let offset: [i32; 8] = [8, -8, 1, -1, 9, 7, -7, -9];
-        let moves = self.directional_moves(piece, pos, &offset);
-        moves
-    }
-
-    fn queen_moves(&self, piece: &Piece, pos: usize) -> Vec<usize> {
-        let dir: [i32; 8] = [8, -8, 1, -1, 9, 7, -7, -9];
-
-        let moves = self.directional_moves(piece, pos, &dir);
-        moves
-    }
-
-    fn bishop_moves(&self, piece: &Piece, pos: usize) -> Vec<usize> {
-        let dir: [i32; 4] = [9, 7, -7, -9];
-
-        let moves = self.directional_moves(piece, pos, &dir);
-        moves
-    }
-
-    fn rook_moves(&self, piece: &Piece, pos: usize) -> Vec<usize> {
-        let dir: [i32; 4] = [8, -8, 1, -1];
-        let moves = self.directional_moves(piece, pos, &dir);
-        moves
-    }
-
-    fn knight_moves(&self, piece: &Piece, pos: usize) -> Vec<usize> {
-        let offset: [i32; 8] = [17, 15, 10, 6, -6, -10, -15, -17];
-        let moves = self.directional_moves(piece, pos, &offset);
-        moves
-    }
-
     pub fn make_move(&mut self, from: usize, to: usize) -> bool {
         let square = self.board.peek(from);
         if let Square::Occupied(piece) = square {
-            if !self.get_piece_moves(piece, from).contains(&to) {
+            if !self.get_moves(piece, from).contains(&to) {
                 return false;
             }
         } else {
@@ -255,16 +219,6 @@ impl Game {
 
         true
     }
-
-    // fn generate_moves(&self) {
-    //     for (idx, square) in self.board.squares().iter().enumerate() {
-    //         let pos = self.idx_to_pos(idx);
-    //         match square {
-    //             Square::Occupied(piece) => _ = self.get_piece_moves(piece, pos),
-    //             _ => continue,
-    //         }
-    //     }
-    // }
 
     fn set(&mut self, idx: usize, piece: Piece) {
         self.board.place_piece(idx, piece);
