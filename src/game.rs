@@ -1,5 +1,5 @@
 use crate::board::Board;
-use crate::piece::{Piece, PieceColor};
+use crate::piece::{Move, Piece, PieceColor};
 
 #[derive(Debug, Clone, Copy)]
 pub enum Square {
@@ -93,10 +93,10 @@ impl Game {
         }
     }
 
-    fn gen_dir_moves(&self, piece: &Piece, pos: usize) -> Vec<usize> {
+    fn gen_dir_moves(&self, piece: &Piece, pos: usize) -> Vec<Move> {
         let dir = piece.get_dir();
         let board = &self.board;
-        let mut moves: Vec<usize> = Vec::new();
+        let mut moves: Vec<Move> = Vec::new();
         for &di in dir {
             let mut cur_pos = pos;
             for _ in 1..board.get_size() as i32 {
@@ -108,10 +108,10 @@ impl Game {
 
                 let square = board.peek(new_pos as usize);
                 match square {
-                    Square::Empty => moves.push(new_pos as usize),
+                    Square::Empty => moves.push(Move::new(pos, new_pos as usize)),
                     Square::Occupied(p) => {
                         if piece.color() != p.color() {
-                            moves.push(new_pos as usize);
+                            moves.push(Move::new(pos, new_pos as usize));
                         }
                         break;
                     }
@@ -128,15 +128,15 @@ impl Game {
         moves
     }
 
-    pub fn get_moves(&self, piece: &Piece, pos: usize) -> Vec<usize> {
+    pub fn get_moves(&self, piece: &Piece, pos: usize) -> Vec<Move> {
         match piece {
             Piece::Pawn(_) => self.gen_pawn_moves(piece, pos),
             _ => self.gen_dir_moves(piece, pos),
         }
     }
 
-    fn gen_pawn_moves(&self, piece: &Piece, pos: usize) -> Vec<usize> {
-        let mut moves = Vec::new();
+    fn gen_pawn_moves(&self, piece: &Piece, pos: usize) -> Vec<Move> {
+        let mut moves: Vec<Move> = Vec::new();
 
         let pos = pos as i32;
         let file = pos % 8;
@@ -151,7 +151,7 @@ impl Game {
         let one = pos + forward;
         if one >= 0 && one < 64 {
             if matches!(self.board.peek(one as usize), Square::Empty) {
-                moves.push(one as usize);
+                moves.push(Move::new(pos as usize, one as usize));
 
                 // 2. Double forward (only if it is the first move)
                 if rank == start_rank {
@@ -160,7 +160,7 @@ impl Game {
                         && two < 64
                         && matches!(self.board.peek(two as usize), Square::Empty)
                     {
-                        moves.push(two as usize);
+                        moves.push(Move::new(pos as usize, two as usize));
                     }
                 }
             }
@@ -186,7 +186,7 @@ impl Game {
             match square {
                 Square::Occupied(p) => {
                     if p.color() != piece.color() {
-                        moves.push(target as usize);
+                        moves.push(Move::new(pos as usize, target as usize));
                     }
                 }
                 _ => continue,
@@ -196,20 +196,20 @@ impl Game {
         moves
     }
 
-    pub fn make_move(&mut self, from: usize, to: usize) -> bool {
-        let square = self.board.peek(from);
+    pub fn make_move(&mut self, mov: Move) -> bool {
+        let square = self.board.peek(mov.from);
         if let Square::Occupied(piece) = square {
-            if !self.get_moves(piece, from).contains(&to) {
+            if !self.get_moves(piece, mov.from).contains(&mov) {
                 return false;
             }
         } else {
             return false;
         } // filters if it is not a valid move
 
-        let square = self.board.get(from);
+        let square = self.board.get(mov.from);
 
         let square = std::mem::replace(square, Square::Empty);
-        self.board.place(square, to);
+        self.board.place(square, mov.to);
 
         // Post move activities
         // self.generate_moves();

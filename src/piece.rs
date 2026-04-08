@@ -48,3 +48,15 @@ pub enum PieceColor {
     White,
     Black,
 }
+
+#[derive(PartialEq, Eq)]
+pub struct Move {
+    pub from: usize,
+    pub to: usize,
+}
+
+impl Move {
+    pub fn new(from: usize, to: usize) -> Self {
+        Self { from, to }
+    }
+}

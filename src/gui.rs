@@ -2,7 +2,7 @@ use macroquad::prelude::*;
 
 use crate::{
     game::{Game, Square},
-    piece::PieceColor,
+    piece::{Move, PieceColor},
 };
 
 pub struct GUI {
@@ -53,7 +53,8 @@ impl GUI {
         match self.selected_pos {
             Some(pos) => {
                 if !matches!(self.game.board().peek(new_pos), Square::_NotExists) {
-                    if self.game.make_move(pos, new_pos) {
+                    let mov = Move::new(pos, new_pos);
+                    if self.game.make_move(mov) {
                         self.selected_pos = None;
                     } else {
                         self.selected_pos = Some(new_pos);
@@ -100,8 +101,12 @@ impl GUI {
             // Drawing possible movements for selected piece if any
             if let Square::Occupied(piece) = &self.game.board().peek(pos) {
                 let moves = &self.game.get_moves(piece, pos);
-                for &pos in moves.iter() {
-                    self.color_square(self.game.col(pos) as f32, self.game.row(pos) as f32, GRAY);
+                for pos in moves.iter() {
+                    self.color_square(
+                        self.game.col(pos.to) as f32,
+                        self.game.row(pos.to) as f32,
+                        GRAY,
+                    );
                 }
             }
         }
@@ -134,8 +139,12 @@ impl GUI {
                 }
 
                 let moves = self.game.get_moves(piece, idx);
-                for &pos in moves.iter() {
-                    self.color_square(self.game.col(pos) as f32, self.game.row(pos) as f32, GRAY);
+                for pos in moves.iter() {
+                    self.color_square(
+                        self.game.col(pos.to) as f32,
+                        self.game.row(pos.to) as f32,
+                        GRAY,
+                    );
                 }
             }
         }
