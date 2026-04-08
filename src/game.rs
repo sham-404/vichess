@@ -106,7 +106,6 @@ impl Game {
     }
 
     fn sliding_moves(&self, piece: &Piece, pos: usize, dir: &[i32]) -> Vec<usize> {
-
         let board = &self.board;
         let mut moves: Vec<usize> = Vec::new();
         for &di in dir {
@@ -135,33 +134,6 @@ impl Game {
         moves
     }
 
-    #[allow(dead_code)]
-    fn get_pawn_dir(pawn: &Piece) -> i32 {
-        if pawn.color() == MyColor::White {
-            return 1;
-        }
-        -1
-    }
-
-    #[allow(dead_code)]
-    fn has_pawn_moved(&self, pawn: &Piece, pos: usize) -> bool {
-        let mut moved = true;
-        match pawn.color() {
-            MyColor::White => {
-                if self.row(pos) == 1 {
-                    moved = false
-                }
-            }
-
-            MyColor::Black => {
-                if self.row(pos) == 6 {
-                    moved = false
-                }
-            }
-        }
-        moved
-    }
-
     fn pawn_moves(&self, piece: &Piece, pos: usize) -> Vec<usize> {
         let mut moves = Vec::new();
 
@@ -183,7 +155,8 @@ impl Game {
                 // 2. Double forward (only if it is the first move)
                 if rank == start_rank {
                     let two = pos + 2 * forward;
-                    if two >= 0 && two < 64
+                    if two >= 0
+                        && two < 64
                         && matches!(self.board.peek(two as usize), Square::Empty)
                     {
                         moves.push(two as usize);

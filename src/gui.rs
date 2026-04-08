@@ -49,7 +49,6 @@ impl GUI {
         if !self.game.board().within_bounds(new_pos) {
             return;
         }
-        
 
         match self.selected_pos {
             Some(pos) => {

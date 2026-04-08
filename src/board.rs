@@ -1,7 +1,4 @@
-use crate::{
-    game::Square,
-    piece::{Piece},
-};
+use crate::{game::Square, piece::Piece};
 
 #[derive(Debug, Clone)]
 pub struct Board {
@@ -21,15 +18,15 @@ impl Board {
         self.size
     }
 
-    pub fn get(&mut self, pos:usize) -> &mut Square {
+    pub fn get(&mut self, pos: usize) -> &mut Square {
         &mut self.squares[pos]
     }
 
-    pub fn peek(&self, pos:usize) -> &Square {
+    pub fn peek(&self, pos: usize) -> &Square {
         &self.squares[pos]
     }
 
-    pub fn place(&mut self, square: Square, pos:usize) {
+    pub fn place(&mut self, square: Square, pos: usize) {
         self.squares[pos] = square;
     }
 
