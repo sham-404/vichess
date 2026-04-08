@@ -105,7 +105,7 @@ impl Game {
         }
     }
 
-    fn sliding_moves(&self, piece: &Piece, pos: usize, dir: &[i32]) -> Vec<usize> {
+    fn directional_moves(&self, piece: &Piece, pos: usize, dir: &[i32]) -> Vec<usize> {
         let board = &self.board;
         let mut moves: Vec<usize> = Vec::new();
         for &di in dir {
@@ -127,6 +127,11 @@ impl Game {
                         break;
                     }
                     Square::_NotExists => {}
+                }
+
+                // Breaking for king and knight as they go only once per direction
+                if matches!(piece.kind, PieceKind::King | PieceKind::Knight) {
+                    break;
                 }
                 cur_pos = new_pos as usize;
             }
@@ -196,76 +201,34 @@ impl Game {
     }
 
     fn king_moves(&self, piece: &Piece, pos: usize) -> Vec<usize> {
-        let mut moves: Vec<usize> = Vec::new();
-
         let offset: [i32; 8] = [8, -8, 1, -1, 9, 7, -7, -9];
-
-        for di in offset {
-            let new_pos = pos as i32 + di;
-
-            if !Self::is_valid_step(pos as i32, new_pos, di) {
-                continue;
-            }
-
-            let square = self.board.peek(new_pos as usize);
-            match square {
-                Square::_NotExists => continue,
-                Square::Empty => moves.push(new_pos as usize),
-                Square::Occupied(p) => {
-                    if p.color != piece.color {
-                        moves.push(new_pos as usize);
-                    }
-                }
-            }
-        }
-
+        let moves = self.directional_moves(piece, pos, &offset);
         moves
     }
 
     fn queen_moves(&self, piece: &Piece, pos: usize) -> Vec<usize> {
         let dir: [i32; 8] = [8, -8, 1, -1, 9, 7, -7, -9];
 
-        let moves = self.sliding_moves(piece, pos, &dir);
+        let moves = self.directional_moves(piece, pos, &dir);
         moves
     }
 
     fn bishop_moves(&self, piece: &Piece, pos: usize) -> Vec<usize> {
         let dir: [i32; 4] = [9, 7, -7, -9];
 
-        let moves = self.sliding_moves(piece, pos, &dir);
+        let moves = self.directional_moves(piece, pos, &dir);
         moves
     }
 
     fn rook_moves(&self, piece: &Piece, pos: usize) -> Vec<usize> {
         let dir: [i32; 4] = [8, -8, 1, -1];
-        let moves = self.sliding_moves(piece, pos, &dir);
+        let moves = self.directional_moves(piece, pos, &dir);
         moves
     }
 
     fn knight_moves(&self, piece: &Piece, pos: usize) -> Vec<usize> {
-        let mut moves: Vec<usize> = Vec::new();
-
         let offset: [i32; 8] = [17, 15, 10, 6, -6, -10, -15, -17];
-
-        for di in offset {
-            let new_pos = pos as i32 + di;
-
-            if !Self::is_valid_step(pos as i32, new_pos, di) {
-                continue;
-            }
-
-            let square = self.board.peek(new_pos as usize);
-            match square {
-                Square::_NotExists => continue,
-                Square::Empty => moves.push(new_pos as usize),
-                Square::Occupied(p) => {
-                    if p.color != piece.color {
-                        moves.push(new_pos as usize);
-                    }
-                }
-            }
-        }
-
+        let moves = self.directional_moves(piece, pos, &offset);
         moves
     }
 
