@@ -113,7 +113,7 @@ impl GUI {
             // Drawing pieces
             if let Square::Occupied(piece) = square {
                 draw_text(
-                    &piece.name(),
+                    &piece.get_name(),
                     x as f32 * self.tile_size,
                     y as f32 * self.tile_size + self.tile_size,
                     64.0,
@@ -129,7 +129,7 @@ impl GUI {
 
         for (idx, square) in self.game.squares().iter().enumerate() {
             if let Square::Occupied(piece) = square {
-                if piece.color() == PieceColor::White {
+                if piece.color() == &PieceColor::White {
                     continue;
                 }
 

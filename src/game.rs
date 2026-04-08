@@ -1,5 +1,5 @@
 use crate::board::Board;
-use crate::piece::{PieceColor, Piece, PieceKind};
+use crate::piece::{Piece, PieceColor};
 
 #[derive(Debug, Clone, Copy)]
 pub enum Square {
@@ -42,20 +42,20 @@ impl Game {
             let white_pawn = self.board.idx(1, col);
             let black_pawn = self.board().idx((self.board().get_size() - 2) as i32, col);
 
-            self.set(white_pawn, Piece::new(PieceKind::Pawn, PieceColor::White));
-            self.set(black_pawn, Piece::new(PieceKind::Pawn, PieceColor::Black));
+            self.set(white_pawn, Piece::Pawn(PieceColor::White));
+            self.set(black_pawn, Piece::Pawn(PieceColor::Black));
         }
 
         // Back rank (order matters)
         let back_rank = [
-            PieceKind::Rook,
-            PieceKind::Knight,
-            PieceKind::Bishop,
-            PieceKind::King,
-            PieceKind::Queen,
-            PieceKind::Bishop,
-            PieceKind::Knight,
-            PieceKind::Rook,
+            Piece::Rook,
+            Piece::Knight,
+            Piece::Bishop,
+            Piece::King,
+            Piece::Queen,
+            Piece::Bishop,
+            Piece::Knight,
+            Piece::Rook,
         ];
 
         for (col, kind) in back_rank.iter().enumerate() {
@@ -64,8 +64,8 @@ impl Game {
             let white_pos = self.board.idx(0, col);
             let black_pos = self.board().idx((self.board().get_size() - 1) as i32, col);
 
-            self.set(white_pos, Piece::new(*kind, PieceColor::White));
-            self.set(black_pos, Piece::new(*kind, PieceColor::Black));
+            self.set(white_pos, kind(PieceColor::White));
+            self.set(black_pos, kind(PieceColor::Black));
         }
     }
 
@@ -94,7 +94,7 @@ impl Game {
     }
 
     fn gen_dir_moves(&self, piece: &Piece, pos: usize) -> Vec<usize> {
-        let dir = piece.kind.get_dir();
+        let dir = piece.get_dir();
         let board = &self.board;
         let mut moves: Vec<usize> = Vec::new();
         for &di in dir {
@@ -110,7 +110,7 @@ impl Game {
                 match square {
                     Square::Empty => moves.push(new_pos as usize),
                     Square::Occupied(p) => {
-                        if piece.color != p.color {
+                        if piece.color() != p.color() {
                             moves.push(new_pos as usize);
                         }
                         break;
@@ -119,7 +119,7 @@ impl Game {
                 }
 
                 // Breaking for king and knight as they go only once per direction
-                if matches!(piece.kind, PieceKind::King | PieceKind::Knight) {
+                if matches!(piece, Piece::King(_) | Piece::Knight(_)) {
                     break;
                 }
                 cur_pos = new_pos as usize;
@@ -129,8 +129,8 @@ impl Game {
     }
 
     pub fn get_moves(&self, piece: &Piece, pos: usize) -> Vec<usize> {
-        match piece.kind {
-            PieceKind::Pawn => self.gen_pawn_moves(piece, pos),
+        match piece {
+            Piece::Pawn(_) => self.gen_pawn_moves(piece, pos),
             _ => self.gen_dir_moves(piece, pos),
         }
     }
@@ -185,7 +185,7 @@ impl Game {
             let square = self.board.peek(target as usize);
             match square {
                 Square::Occupied(p) => {
-                    if p.color != piece.color {
+                    if p.color() != piece.color() {
                         moves.push(target as usize);
                     }
                 }

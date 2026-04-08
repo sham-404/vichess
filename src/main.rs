@@ -1,7 +1,7 @@
-mod game;
-mod piece;
-mod gui;
 mod board;
+mod game;
+mod gui;
+mod piece;
 
 use crate::{game::Game, gui::GUI};
 

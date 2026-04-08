@@ -54,7 +54,7 @@ impl Board {
         println!("---------------");
         for (idx, square) in self.squares().iter().enumerate() {
             match *square {
-                Square::Occupied(piece) => print!("{} ", piece.name()),
+                Square::Occupied(piece) => print!("{} ", piece.get_name()),
                 _ => print!("  "),
             }
 
