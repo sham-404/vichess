@@ -1,5 +1,5 @@
 use crate::board::Board;
-use crate::piece::{Move, Piece, PieceColor};
+use crate::piece::{Move, MoveKind, Piece, PieceColor};
 
 #[derive(Debug, Clone, Copy)]
 pub enum Square {
@@ -230,18 +230,32 @@ impl Game {
     pub fn make_move(&mut self, from: usize, to: usize) -> bool {
         let square = self.board.peek(from);
 
-        if let Square::Occupied(piece) = square {
-            if !self.get_moves(piece, from).iter().any(|mov| mov.to == to) {
-                return false;
-            }
-        } else {
-            return false;
-        } // filters if it is not a valid move
+        let piece = match square {
+            Square::Occupied(p) => p,
+            _ => return false,
+            
+        };
 
-        let square = self.board.get(from);
+        let moves = self.get_moves(piece, from);
+        let mov = match moves.iter().find(|mov| mov.to == to) {
+            Some(m) => m,
+            None => return false,
+        }; // filters if it is not a valid move
+
+        let square = self.board.get(mov.from);
 
         let square = std::mem::replace(square, Square::Empty);
         self.board.place(square, to);
+
+        // taking care of special moves 
+
+        match mov.kind {
+            MoveKind::Promotion(p) => {
+                self.board.place_piece(to, p);
+            }
+            _ => {},
+            
+        };
 
         // Post move activities
         // self.generate_moves();

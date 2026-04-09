@@ -54,7 +54,7 @@ pub struct Move {
     pub from: usize,
     pub to: usize,
     pub capture: Option<Piece>,
-    kind: MoveKind,
+    pub kind: MoveKind,
 }
 
 impl Move {
