@@ -2,7 +2,7 @@ use macroquad::prelude::*;
 
 use crate::{
     game::{Game, Square},
-    piece::{Move, PieceColor},
+    piece::PieceColor,
 };
 
 pub struct GUI {
@@ -53,8 +53,7 @@ impl GUI {
         match self.selected_pos {
             Some(pos) => {
                 if !matches!(self.game.board().peek(new_pos), Square::_NotExists) {
-                    let mov = Move::new(pos, new_pos);
-                    if self.game.make_move(mov) {
+                    if self.game.make_move(pos, new_pos) {
                         self.selected_pos = None;
                     } else {
                         self.selected_pos = Some(new_pos);
