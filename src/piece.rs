@@ -49,7 +49,7 @@ pub enum PieceColor {
     Black,
 }
 
-#[derive(PartialEq, Eq, Debug)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub struct Move {
     pub from: usize,
     pub to: usize,
@@ -59,11 +59,17 @@ pub struct Move {
 
 impl Move {
     pub fn new(from: usize, to: usize) -> Self {
-        Self { from, to, capture: None, kind: MoveKind::Normal }
+        Self {
+            from,
+            to,
+            capture: None,
+            kind: MoveKind::Normal,
+        }
     }
 
     pub fn with_capture(mut self, piece: Piece) -> Self {
         self.capture = Some(piece);
+        self.kind = MoveKind::Capture;
         self
     }
 
@@ -72,10 +78,11 @@ impl Move {
     }
 }
 
-#[derive(PartialEq, Eq, Debug)]
+#[derive(PartialEq, Eq, Debug, Clone, Copy)]
 #[allow(dead_code)]
 pub enum MoveKind {
     Normal,
+    Capture,
     CastleKing,
     CastleQueen,
     Promotion(Piece),

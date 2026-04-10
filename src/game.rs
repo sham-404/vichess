@@ -8,15 +8,19 @@ pub enum Square {
     Occupied(Piece),
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct Game {
     board: Board,
+    history: Vec<Move>,
+    redo_list: Vec<Move>,
 }
 
 impl Game {
     pub fn new(size: usize) -> Self {
         let game = Self {
             board: Board::new(size),
+            history: Vec::new(),
+            redo_list: Vec::new(),
         };
         // game.generate_moves();
         game
@@ -233,12 +237,11 @@ impl Game {
         let piece = match square {
             Square::Occupied(p) => p,
             _ => return false,
-            
         };
 
         let moves = self.get_moves(piece, from);
         let mov = match moves.iter().find(|mov| mov.to == to) {
-            Some(m) => m,
+            Some(&m) => m,
             None => return false,
         }; // filters if it is not a valid move
 
@@ -247,23 +250,49 @@ impl Game {
         let square = std::mem::replace(square, Square::Empty);
         self.board.place(square, to);
 
-        // taking care of special moves 
-
+        // taking care of special moves
         match mov.kind {
             MoveKind::Promotion(p) => {
                 self.board.place_piece(to, p);
             }
-            _ => {},
-            
+            _ => {}
         };
 
         // Post move activities
+
+        self.history.push(mov);
         // self.generate_moves();
 
         // Debugging area
         // self.board().print_cli_board();
 
         true
+    }
+
+    pub fn undo_move(&mut self) {
+        if self.history.is_empty() {
+            return;
+        }
+
+        let mov = self.history.pop().unwrap();
+
+        let square = self.board.get(mov.to);
+        let square = std::mem::replace(square, Square::Empty);
+        self.board.place(square, mov.from);
+
+        // Returning the captured piece
+        if let Some(piece) = mov.capture {
+            self.board.place_piece(mov.to, piece);
+        }
+
+        // taking care of special moves
+        match mov.kind {
+            MoveKind::Normal => {}
+            MoveKind::Promotion(p) => {
+                self.board.place_piece(mov.from, Piece::Pawn(*p.color()));
+            }
+            _ => {}
+        }
     }
 
     fn set(&mut self, idx: usize, piece: Piece) {

@@ -33,6 +33,9 @@ impl GUI {
 
     pub fn handle_clicks(&mut self) {
         if !is_mouse_button_pressed(MouseButton::Left) {
+            if is_mouse_button_pressed(MouseButton::Right) {
+                self.game.undo_move();
+            }
             return;
         }
 
