@@ -328,6 +328,7 @@ impl Game {
             }
             _ => {}
         }
+        self.change_turn(true);
     }
 
     fn set(&mut self, idx: usize, piece: Piece) {

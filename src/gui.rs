@@ -81,9 +81,9 @@ impl GUI {
 
             let color = {
                 if (x + y) as usize % 2 == 0 {
-                    self.color.dark_square
-                } else {
                     self.color.light_square
+                } else {
+                    self.color.dark_square
                 }
             };
 
