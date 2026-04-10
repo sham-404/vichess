@@ -96,6 +96,21 @@ impl GUI {
             //self.debug_square_drawing();
         }
 
+        // Drawing the last move on board
+        if let Some(mov) = self.game.get_last_move() {
+            self.color_square(
+                self.game.col(mov.from) as f32,
+                self.game.row(mov.from) as f32,
+                self.color.last_move,
+            );
+
+            self.color_square(
+                self.game.col(mov.to) as f32,
+                self.game.row(mov.to) as f32,
+                self.color.last_move,
+            );
+        }
+
         // Drawing selected square
         if self.selected_pos.is_some() {
             let pos = self.selected_pos.unwrap();
@@ -118,21 +133,6 @@ impl GUI {
                     );
                 }
             }
-        }
-
-        // Drawing the last move on board
-        if let Some(mov) = self.game.get_last_move() {
-            self.color_square(
-                self.game.col(mov.from) as f32,
-                self.game.row(mov.from) as f32,
-                self.color.last_move,
-            );
-
-            self.color_square(
-                self.game.col(mov.to) as f32,
-                self.game.row(mov.to) as f32,
-                self.color.last_move,
-            );
         }
     }
 
@@ -223,11 +223,11 @@ impl BoardColor {
         Self {
             light_square: hex("#DCE1C5"),
             dark_square: hex("#5A6B3C"),
-            selected_piece: hex("#D18B4780"),
+            selected_piece: hex("#D18B47C0"),
             possible_moves: hex("#8FBF8F80"),
             background: hex("#1F2A1F"),
             attacked: hex("#f2000080"),
-            last_move: hex("#D18B4720"),
+            last_move: hex("#D18B4760"),
         }
     }
 
@@ -247,11 +247,23 @@ impl BoardColor {
         Self {
             light_square: hex("#EEEED2"),
             dark_square: hex("#769656"),
-            selected_piece: hex("#E8C54780"),
+            selected_piece: hex("#E8C547C0"),
             possible_moves: hex("#A8D5BABB"),
             background: hex("#1B1B1B"),
             attacked: hex("#b3000080"),
-            last_move: hex("#E8C54720"),
+            last_move: hex("#E8C54760"),
+        }
+    }
+
+    pub fn blue() -> Self {
+        Self {
+            light_square: hex("#C9D6DF"),     // pale mist
+            dark_square: hex("#7A97A8"),      // muted blue-gray
+            selected_piece: hex("#5FA8D3C0"), // soft icy blue highlight
+            possible_moves: hex("#A6C8E080"), // airy light blue
+            background: hex("#1E2A32"),       // deep desaturated navy
+            attacked: hex("#E0525280"),       // softened red (not harsh)
+            last_move: hex("#5FA8D360"),      // subtle echo glow
         }
     }
 }
