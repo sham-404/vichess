@@ -12,15 +12,24 @@ pub enum Square {
 pub struct Game {
     board: Board,
     history: Vec<Move>,
+    players: Vec<Player>,
+    cur_player: Player,
     // redo_list: Vec<Move>,
 }
 
 impl Game {
     pub fn new(size: usize) -> Self {
+        let players = vec![
+            Player::new(PieceColor::White),
+            Player::new(PieceColor::Black),
+        ];
+        let cur_player = players[0];
+
         let game = Self {
             board: Board::new(size),
             history: Vec::new(),
-            // redo_list: Vec::new(),
+            players,
+            cur_player, // redo_list: Vec::new(),
         };
         // game.generate_moves();
         game
@@ -40,6 +49,22 @@ impl Game {
 
     pub fn get_last_move(&self) -> Option<&Move> {
         self.history.last()
+    }
+
+    fn change_turn(&mut self, reverse: bool) {
+        let fac: isize = if reverse { -1 } else { 1 };
+
+        let len = self.players.len() as isize;
+
+        let idx = self
+            .players
+            .iter()
+            .position(|&p| p == self.cur_player)
+            .expect("Current player not in players") as isize;
+
+        let new_idx = (idx + fac).rem_euclid(len) as usize;
+
+        self.cur_player = self.players[new_idx];
     }
 
     pub fn setup_standard(&mut self) {
@@ -243,6 +268,11 @@ impl Game {
             _ => return false,
         };
 
+        // Return if it is not the current players move
+        if piece.color() != &self.cur_player.color {
+            return false;
+        }
+
         let moves = self.get_moves(piece, from);
         let mov = match moves.iter().find(|mov| mov.to == to) {
             Some(&m) => m,
@@ -265,6 +295,7 @@ impl Game {
         // Post move activities
 
         self.history.push(mov);
+        self.change_turn(false);
         // self.generate_moves();
 
         // Debugging area
@@ -309,5 +340,16 @@ impl Game {
 
     pub fn col(&self, idx: usize) -> i32 {
         (idx % self.board.get_size()) as i32
+    }
+}
+
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+pub struct Player {
+    color: PieceColor,
+}
+
+impl Player {
+    pub fn new(color: PieceColor) -> Self {
+        Self { color }
     }
 }
