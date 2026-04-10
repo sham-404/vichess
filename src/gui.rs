@@ -105,14 +105,34 @@ impl GUI {
             // Drawing possible movements for selected piece if any
             if let Square::Occupied(piece) = &self.game.board().peek(pos) {
                 let moves = &self.game.get_moves(piece, pos);
-                for pos in moves.iter() {
+                for mov in moves.iter() {
+                    let color = match mov.capture {
+                        Some(_) => self.color.attacked,
+                        None => self.color.possible_moves,
+                    };
+
                     self.color_square(
-                        self.game.col(pos.to) as f32,
-                        self.game.row(pos.to) as f32,
-                        self.color.possible_moves,
+                        self.game.col(mov.to) as f32,
+                        self.game.row(mov.to) as f32,
+                        color,
                     );
                 }
             }
+        }
+
+        // Drawing the last move on board
+        if let Some(mov) = self.game.get_last_move() {
+            self.color_square(
+                self.game.col(mov.from) as f32,
+                self.game.row(mov.from) as f32,
+                self.color.last_move,
+            );
+
+            self.color_square(
+                self.game.col(mov.to) as f32,
+                self.game.row(mov.to) as f32,
+                self.color.last_move,
+            );
         }
     }
 
@@ -193,6 +213,8 @@ pub struct BoardColor {
     selected_piece: Color,
     possible_moves: Color,
     background: Color,
+    attacked: Color,
+    last_move: Color,
 }
 
 #[allow(dead_code)]
@@ -201,9 +223,11 @@ impl BoardColor {
         Self {
             light_square: hex("#DCE1C5"),
             dark_square: hex("#5A6B3C"),
-            selected_piece: hex("#D18B47"),
+            selected_piece: hex("#D18B4780"),
             possible_moves: hex("#8FBF8F80"),
             background: hex("#1F2A1F"),
+            attacked: hex("#f2000080"),
+            last_move: hex("#D18B4720"),
         }
     }
 
@@ -211,9 +235,11 @@ impl BoardColor {
         Self {
             light_square: hex("#3C3F41"),
             dark_square: hex("#2B2B2B"),
-            selected_piece: hex("#F39C12"),
+            selected_piece: hex("#F39C1280"),
             possible_moves: hex("#3498DB80"),
             background: hex("#1E1E1E"),
+            attacked: hex("#ff1a0080"),
+            last_move: hex("#F39C1220"),
         }
     }
 
@@ -221,9 +247,11 @@ impl BoardColor {
         Self {
             light_square: hex("#EEEED2"),
             dark_square: hex("#769656"),
-            selected_piece: hex("#E8C547"),
+            selected_piece: hex("#E8C54780"),
             possible_moves: hex("#A8D5BABB"),
             background: hex("#1B1B1B"),
+            attacked: hex("#b3000080"),
+            last_move: hex("#E8C54720"),
         }
     }
 }

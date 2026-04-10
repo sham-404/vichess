@@ -12,7 +12,7 @@ pub enum Square {
 pub struct Game {
     board: Board,
     history: Vec<Move>,
-    redo_list: Vec<Move>,
+    // redo_list: Vec<Move>,
 }
 
 impl Game {
@@ -20,7 +20,7 @@ impl Game {
         let game = Self {
             board: Board::new(size),
             history: Vec::new(),
-            redo_list: Vec::new(),
+            // redo_list: Vec::new(),
         };
         // game.generate_moves();
         game
@@ -36,6 +36,10 @@ impl Game {
 
     pub fn get_size(&self) -> usize {
         self.board.get_size()
+    }
+
+    pub fn get_last_move(&self) -> Option<&Move> {
+        self.history.last()
     }
 
     pub fn setup_standard(&mut self) {
