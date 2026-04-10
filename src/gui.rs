@@ -9,6 +9,7 @@ pub struct GUI {
     game: Game,
     tile_size: f32,
     selected_pos: Option<usize>,
+    color: BoardColor,
 }
 
 impl GUI {
@@ -18,12 +19,13 @@ impl GUI {
             game: game,
             selected_pos: None,
             tile_size,
+            color: BoardColor::dark(),
         }
     }
 
     pub async fn run(&mut self) {
         loop {
-            clear_background(LIGHTGRAY);
+            clear_background(self.color.background);
             self.draw_board();
             self.draw_pieces();
             self.handle_clicks();
@@ -79,9 +81,9 @@ impl GUI {
 
             let color = {
                 if (x + y) as usize % 2 == 0 {
-                    BLACK
+                    self.color.dark_square
                 } else {
-                    WHITE
+                    self.color.light_square
                 }
             };
 
@@ -98,7 +100,7 @@ impl GUI {
         if self.selected_pos.is_some() {
             let pos = self.selected_pos.unwrap();
             let (x, y) = self.game.board().get_xy(pos);
-            self.color_square(x as f32, y as f32, PINK);
+            self.color_square(x as f32, y as f32, self.color.selected_piece);
 
             // Drawing possible movements for selected piece if any
             if let Square::Occupied(piece) = &self.game.board().peek(pos) {
@@ -107,7 +109,7 @@ impl GUI {
                     self.color_square(
                         self.game.col(pos.to) as f32,
                         self.game.row(pos.to) as f32,
-                        GRAY,
+                        self.color.possible_moves,
                     );
                 }
             }
@@ -117,14 +119,20 @@ impl GUI {
     fn draw_pieces(&self) {
         for (idx, square) in self.game.squares().iter().enumerate() {
             let (x, y) = self.game.board().get_xy(idx);
+
             // Drawing pieces
             if let Square::Occupied(piece) = square {
+                let color = match piece.color() {
+                    PieceColor::White => LIGHTGRAY,
+                    PieceColor::Black => BLACK,
+                };
+
                 draw_text(
                     &piece.get_name(),
                     x as f32 * self.tile_size,
                     y as f32 * self.tile_size + self.tile_size,
                     64.0,
-                    GREEN,
+                    color,
                 );
             }
         }
@@ -160,5 +168,62 @@ impl GUI {
             self.tile_size,
             color,
         );
+    }
+}
+
+fn hex(hex: &str) -> Color {
+    let hex = hex.trim_start_matches('#');
+
+    let r = u8::from_str_radix(&hex[0..2], 16).unwrap();
+    let g = u8::from_str_radix(&hex[2..4], 16).unwrap();
+    let b = u8::from_str_radix(&hex[4..6], 16).unwrap();
+
+    let a = if hex.len() == 8 {
+        u8::from_str_radix(&hex[6..8], 16).unwrap()
+    } else {
+        255
+    };
+
+    Color::from_rgba(r, g, b, a)
+}
+
+pub struct BoardColor {
+    light_square: Color,
+    dark_square: Color,
+    selected_piece: Color,
+    possible_moves: Color,
+    background: Color,
+}
+
+#[allow(dead_code)]
+impl BoardColor {
+    pub fn matte() -> Self {
+        Self {
+            light_square: hex("#DCE1C5"),
+            dark_square: hex("#5A6B3C"),
+            selected_piece: hex("#D18B47"),
+            possible_moves: hex("#8FBF8F80"),
+            background: hex("#1F2A1F"),
+        }
+    }
+
+    pub fn dark() -> Self {
+        Self {
+            light_square: hex("#3C3F41"),
+            dark_square: hex("#2B2B2B"),
+            selected_piece: hex("#F39C12"),
+            possible_moves: hex("#3498DB80"),
+            background: hex("#1E1E1E"),
+        }
+    }
+
+    pub fn classic() -> Self {
+        Self {
+            light_square: hex("#EEEED2"),
+            dark_square: hex("#769656"),
+            selected_piece: hex("#E8C547"),
+            possible_moves: hex("#A8D5BABB"),
+            background: hex("#1B1B1B"),
+        }
     }
 }
