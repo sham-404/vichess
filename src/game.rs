@@ -271,6 +271,10 @@ impl Game {
         for (idx, square) in self.board.squares().iter().enumerate() {
             match square {
                 Square::Occupied(piece) => {
+                    if piece.color() != &self.cur_player.color {
+                        continue;
+                    }
+
                     let mut moves = self.get_moves(piece, idx);
                     self.legal_moves.append(&mut moves);
                 },
