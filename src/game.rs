@@ -38,6 +38,10 @@ impl Game {
         game
     }
 
+    pub fn get_attack_map(&self) -> &[bool] {
+        &self.attack_map
+    }
+
     pub fn board(&self) -> &Board {
         &self.board
     }
@@ -104,7 +108,7 @@ impl Game {
             self.set(black_pos, kind(PieceColor::Black));
         }
 
-        // generate moves after placing the pieces 
+        // generate moves after placing the pieces
         self.generate_moves();
     }
 
@@ -265,22 +269,110 @@ impl Game {
         }
     }
 
+    fn gen_dir_attacks(&self, piece: &Piece, pos: usize) -> Vec<usize> {
+        let dir = piece.get_dir();
+        let board = &self.board;
+        let mut attacks: Vec<usize> = Vec::new();
+        for &di in dir {
+            let mut cur_pos = pos;
+            for _ in 1..board.get_size() as i32 {
+                let new_pos = cur_pos as i32 + di;
+
+                if !Self::is_valid_step(cur_pos as i32, new_pos, di) {
+                    break;
+                }
+
+                let square = board.peek(new_pos as usize);
+                match square {
+                    Square::Empty => attacks.push(new_pos as usize),
+                    Square::Occupied(opp_piece) => {
+                        if piece.color() != opp_piece.color() {
+                            attacks.push(new_pos as usize);
+                        }
+                        break;
+                    }
+                }
+
+                // Breaking for king and knight as they go only once per direction
+                if matches!(piece, Piece::King(_) | Piece::Knight(_)) {
+                    break;
+                }
+                cur_pos = new_pos as usize;
+            }
+        }
+        attacks
+    }
+
+    fn gen_pawn_attacks(&self, pawn: &Piece, pos: usize) -> Vec<usize> {
+        let mut attacks: Vec<usize> = Vec::new();
+
+        let pos = pos as i32;
+        let file = pos % 8;
+
+        let captures = match pawn.color() {
+            PieceColor::White => [7, 9],
+            PieceColor::Black => [-7, -9],
+        };
+
+        // 3. Captures
+        for &cap in &captures {
+            let target = pos + cap;
+
+            if target < 0 || target >= 64 {
+                continue;
+            }
+
+            let target_file = target % 8;
+
+            // ensure diagonal (no wrapping)
+            if (target_file - file).abs() != 1 {
+                continue;
+            }
+
+            // check if the diagonal piece is the opponent
+            let square = self.board.peek(target as usize);
+            match square {
+                Square::Occupied(opp_piece) => {
+                    if opp_piece.color() != pawn.color() {
+                        attacks.push(target as usize);
+                    }
+                }
+                Square::Empty => attacks.push(target as usize),
+            }
+        }
+
+        attacks
+    }
+
+    pub fn get_attacks(&self, piece: &Piece, pos: usize) -> Vec<usize> {
+        match piece {
+            Piece::Pawn(_) => self.gen_pawn_attacks(piece, pos),
+            _ => self.gen_dir_attacks(piece, pos),
+        }
+    }
+
     fn generate_moves(&mut self) {
+        self.legal_moves.clear();
+        self.attack_map = [false; 64];
+
         for (idx, square) in self.board.squares().iter().enumerate() {
             match square {
                 Square::Occupied(piece) => {
                     if piece.color() != &self.cur_player.color {
+                        //generate attack map if it is the opponent piece
+
+                        let attacks = self.get_attacks(piece, idx);
+                        attacks.iter().for_each(|&idx| self.attack_map[idx] = true);
+
                         continue;
                     }
 
                     let mut moves = self.get_moves(piece, idx);
                     self.legal_moves.append(&mut moves);
-                },
+                }
                 Square::Empty => continue,
             }
         }
-
-        // Making attack_map
     }
 
     pub fn make_move(&mut self, from: usize, to: usize) -> bool {
@@ -319,7 +411,7 @@ impl Game {
 
         self.history.push(mov);
         self.change_turn(false);
-        // self.generate_moves();
+        self.generate_moves();
 
         // Debugging area
         // self.board().print_cli_board();
@@ -352,6 +444,7 @@ impl Game {
             _ => {}
         }
         self.change_turn(true);
+        self.generate_moves();
     }
 
     fn set(&mut self, idx: usize, piece: Piece) {

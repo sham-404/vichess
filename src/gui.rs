@@ -86,8 +86,6 @@ impl GUI {
             };
 
             self.color_square(x, y, color);
-
-            //self.debug_square_drawing();
         }
 
         // Drawing the last move on board
@@ -128,6 +126,7 @@ impl GUI {
                 }
             }
         }
+        self.debug_square_drawing();
     }
 
     fn draw_pieces(&self) {
@@ -154,22 +153,15 @@ impl GUI {
 
     #[allow(dead_code)]
     fn debug_square_drawing(&self) {
-        // possible piece movements
+        // attack squares
 
-        for (idx, square) in self.game.squares().iter().enumerate() {
-            if let Square::Occupied(piece) = square {
-                if piece.color() == &PieceColor::White {
-                    continue;
-                }
-
-                let moves = self.game.get_moves(piece, idx);
-                for pos in moves.iter() {
-                    self.color_square(
-                        self.game.col(pos.to) as f32,
-                        self.game.row(pos.to) as f32,
-                        GRAY,
-                    );
-                }
+        for (idx, attack) in self.game.get_attack_map().iter().enumerate() {
+            if *attack {
+                self.color_square(
+                    self.game.col(idx) as f32,
+                    self.game.row(idx) as f32,
+                    self.color.attacked,
+                );
             }
         }
     }
