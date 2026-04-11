@@ -110,8 +110,8 @@ impl GUI {
             self.color_square(x as f32, y as f32, self.color.selected_piece);
 
             // Drawing possible movements for selected piece if any
-            if let Square::Occupied(piece) = &self.game.board().peek(pos) {
-                let moves = &self.game.get_moves(piece, pos);
+            if let Square::Occupied(_) = &self.game.board().peek(pos) {
+                let moves = &self.game.moves(pos);
                 for mov in moves.iter() {
                     let color = match mov.capture {
                         Some(_) => self.color.attacked,

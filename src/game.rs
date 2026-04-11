@@ -262,11 +262,16 @@ impl Game {
         moves
     }
 
-    pub fn get_moves(&self, piece: &Piece, pos: usize) -> Vec<Move> {
+    fn get_moves(&self, piece: &Piece, pos: usize) -> Vec<Move> {
         match piece {
             Piece::Pawn(_) => self.gen_pawn_moves(piece, pos),
             _ => self.gen_dir_moves(piece, pos),
         }
+    }
+
+    pub fn moves(&self, pos: usize) -> Vec<&Move> {
+        let moves = self.legal_moves.iter().filter(|&m| m.from == pos).collect();
+        moves
     }
 
     fn gen_dir_attacks(&self, piece: &Piece, pos: usize) -> Vec<usize> {
