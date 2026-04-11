@@ -112,7 +112,7 @@ impl Game {
         self.generate_moves();
     }
 
-    pub fn is_valid_step(from: i32, to: i32, dir: i32) -> bool {
+    fn is_valid_step(from: i32, to: i32, dir: i32) -> bool {
         if to < 0 || to >= 64 {
             return false;
         }
@@ -336,7 +336,7 @@ impl Game {
         attacks
     }
 
-    pub fn get_attacks(&self, piece: &Piece, pos: usize) -> Vec<usize> {
+    fn get_attacks(&self, piece: &Piece, pos: usize) -> Vec<usize> {
         match piece {
             Piece::Pawn(_) => self.gen_pawn_attacks(piece, pos),
             _ => self.gen_dir_attacks(piece, pos),
