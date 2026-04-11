@@ -14,6 +14,8 @@ pub struct Game {
     history: Vec<Move>,
     players: Vec<Player>,
     cur_player: Player,
+    legal_moves: Vec<Move>,
+    attack_map: [bool; 64],
     // redo_list: Vec<Move>,
 }
 
@@ -25,13 +27,15 @@ impl Game {
         ];
         let cur_player = players[0];
 
-        let game = Self {
+        let mut game = Self {
             board: Board::new(size),
             history: Vec::new(),
             players,
             cur_player, // redo_list: Vec::new(),
+            legal_moves: Vec::new(),
+            attack_map: [false; 64],
         };
-        // game.generate_moves();
+
         game
     }
 
@@ -100,6 +104,9 @@ impl Game {
             self.set(white_pos, kind(PieceColor::White));
             self.set(black_pos, kind(PieceColor::Black));
         }
+
+        // generate moves after placing the pieces 
+        self.generate_moves();
     }
 
     pub fn is_valid_step(from: i32, to: i32, dir: i32) -> bool {
@@ -258,6 +265,21 @@ impl Game {
             Piece::Pawn(_) => self.gen_pawn_moves(piece, pos),
             _ => self.gen_dir_moves(piece, pos),
         }
+    }
+
+    fn generate_moves(&mut self) {
+        for (idx, square) in self.board.squares().iter().enumerate() {
+            match square {
+                Square::Occupied(piece) => {
+                    let mut moves = self.get_moves(piece, idx);
+                    self.legal_moves.append(&mut moves);
+                },
+                Square::_NotExists => continue,
+                Square::Empty => continue,
+            }
+        }
+
+        // Making attack_map
     }
 
     pub fn make_move(&mut self, from: usize, to: usize) -> bool {
