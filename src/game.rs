@@ -283,14 +283,10 @@ impl Game {
                 }
 
                 let square = board.peek(new_pos as usize);
-                match square {
-                    Square::Empty => attacks.push(new_pos as usize),
-                    Square::Occupied(opp_piece) => {
-                        if piece.color() != opp_piece.color() {
-                            attacks.push(new_pos as usize);
-                        }
-                        break;
-                    }
+                attacks.push(new_pos as usize);
+
+                if let Square::Occupied(_) = *square {
+                    break;
                 }
 
                 // Breaking for king and knight as they go only once per direction
@@ -329,16 +325,7 @@ impl Game {
                 continue;
             }
 
-            // check if the diagonal piece is the opponent
-            let square = self.board.peek(target as usize);
-            match square {
-                Square::Occupied(opp_piece) => {
-                    if opp_piece.color() != pawn.color() {
-                        attacks.push(target as usize);
-                    }
-                }
-                Square::Empty => attacks.push(target as usize),
-            }
+            attacks.push(target as usize);
         }
 
         attacks
