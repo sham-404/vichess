@@ -3,7 +3,6 @@ use crate::piece::{Move, MoveKind, Piece, PieceColor};
 
 #[derive(Debug, Clone, Copy)]
 pub enum Square {
-    _NotExists,
     Empty,
     Occupied(Piece),
 }
@@ -27,7 +26,7 @@ impl Game {
         ];
         let cur_player = players[0];
 
-        let mut game = Self {
+        let game = Self {
             board: Board::new(size),
             history: Vec::new(),
             players,
@@ -155,7 +154,6 @@ impl Game {
                         }
                         break;
                     }
-                    Square::_NotExists => {}
                 }
 
                 // Breaking for king and knight as they go only once per direction
@@ -278,7 +276,6 @@ impl Game {
                     let mut moves = self.get_moves(piece, idx);
                     self.legal_moves.append(&mut moves);
                 },
-                Square::_NotExists => continue,
                 Square::Empty => continue,
             }
         }

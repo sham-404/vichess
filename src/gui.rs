@@ -57,12 +57,10 @@ impl GUI {
 
         match self.selected_pos {
             Some(pos) => {
-                if !matches!(self.game.board().peek(new_pos), Square::_NotExists) {
-                    if self.game.make_move(pos, new_pos) {
-                        self.selected_pos = None;
-                    } else {
-                        self.selected_pos = Some(new_pos);
-                    }
+                if self.game.make_move(pos, new_pos) {
+                    self.selected_pos = None;
+                } else {
+                    self.selected_pos = Some(new_pos);
                 }
             }
             None => self.selected_pos = Some(new_pos),
@@ -76,7 +74,7 @@ impl GUI {
         self.tile_size = width.min(height) / self.game.get_size() as f32;
 
         // Draw Board states
-        for (idx, square) in self.game.squares().iter().enumerate() {
+        for (idx, _) in self.game.squares().iter().enumerate() {
             let (x, y) = self.game.board().get_xy(idx);
 
             let color = {
@@ -86,10 +84,6 @@ impl GUI {
                     self.color.dark_square
                 }
             };
-
-            if let Square::_NotExists = square {
-                continue;
-            }
 
             self.color_square(x, y, color);
 
