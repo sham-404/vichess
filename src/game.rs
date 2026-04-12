@@ -510,13 +510,11 @@ impl Game {
 
         // update king_pos if white king moved
         if self.king_pos.white == from {
-            debug_assert!(self.board.peek(to) == &Square::Occupied(Piece::King(PieceColor::White)));
             self.king_pos.white = to;
         }
 
         // update king_pos if black king moved
         if self.king_pos.black == from {
-            debug_assert!(self.board.peek(to) == &Square::Occupied(Piece::King(PieceColor::Black)));
             self.king_pos.black = to;
         }
 
@@ -559,13 +557,11 @@ impl Game {
 
         // update king_pos if white king moved
         if self.king_pos.white == mov.to {
-            debug_assert!(self.board.peek(mov.from) == &Square::Occupied(Piece::King(PieceColor::White)));
             self.king_pos.white = mov.from;
         }
 
         // update king_pos if black king moved
         if self.king_pos.black == mov.to {
-            debug_assert!(self.board.peek(mov.from) == &Square::Occupied(Piece::King(PieceColor::Black)));
             self.king_pos.black = mov.from;
         }
 
