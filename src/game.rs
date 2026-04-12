@@ -343,6 +343,140 @@ impl Game {
         }
     }
 
+    fn is_square_attacked(&self, pos: usize, cur: PieceColor) -> bool {
+        let board = &self.board;
+        let diag = [9, 7, -7, -9];
+        for di in diag {
+            let mut cur_pos = pos;
+            for _ in 1..board.get_size() as i32 {
+                let new_pos = cur_pos as i32 + di;
+
+                if !Self::is_valid_step(cur_pos as i32, new_pos, di) {
+                    break;
+                }
+
+                let square = board.peek(new_pos as usize);
+                match square {
+                    Square::Empty => {},
+                    Square::Occupied(opp_piece) => match opp_piece {
+                        Piece::Bishop(c) | Piece::Queen(c) => {
+                            if c != &cur {
+                                return true;
+                            }
+                            break;
+                        }
+                        _ => {}
+                    },
+                }
+                cur_pos = new_pos as usize;
+            }
+        }
+
+        let straight = [8, -8, 1, -1];
+        for di in straight {
+            let mut cur_pos = pos;
+            for _ in 1..board.get_size() as i32 {
+                let new_pos = cur_pos as i32 + di;
+
+                if !Self::is_valid_step(cur_pos as i32, new_pos, di) {
+                    break;
+                }
+
+                let square = board.peek(new_pos as usize);
+                match square {
+                    Square::Empty => {},
+                    Square::Occupied(opp_piece) => match opp_piece {
+                        Piece::Rook(c) | Piece::Queen(c) => {
+                            if c != &cur {
+                                return true;
+                            }
+                            break;
+                        }
+                        _ => {}
+                    },
+                }
+                cur_pos = new_pos as usize;
+            }
+        }
+
+        let all_dir = [8, -8, 1, -1, 9, 7, -7, -9];
+        for di in all_dir {
+            let cur_pos = pos;
+            let new_pos = cur_pos as i32 + di;
+
+            if !Self::is_valid_step(cur_pos as i32, new_pos, di) {
+                break;
+            }
+
+            let square = board.peek(new_pos as usize);
+            match square {
+                Square::Empty => {},
+                Square::Occupied(opp_piece) => match opp_piece {
+                    Piece::King(c) => {
+                        if c != &cur {
+                            return true;
+                        }
+                        break;
+                    }
+                    _ => {}
+                },
+            }
+        }
+
+        let knight_dir = [17, 15, 10, 6, -6, -10, -15, -17];
+        for di in knight_dir {
+            let cur_pos = pos;
+            let new_pos = cur_pos as i32 + di;
+
+            if !Self::is_valid_step(cur_pos as i32, new_pos, di) {
+                break;
+            }
+
+            let square = board.peek(new_pos as usize);
+            match square {
+                Square::Empty => {},
+                Square::Occupied(opp_piece) => match opp_piece {
+                    Piece::Knight(c) => {
+                        if c != &cur {
+                            return true;
+                        }
+                        break;
+                    }
+                    _ => {}
+                },
+            }
+        }
+
+        let pawn_attacks = match cur {
+            PieceColor::White => [7, 9],
+            PieceColor::Black => [-7, -9],
+        };
+        for di in pawn_attacks {
+            let cur_pos = pos;
+            let new_pos = cur_pos as i32 + di;
+
+            if !Self::is_valid_step(cur_pos as i32, new_pos, di) {
+                break;
+            }
+
+            let square = board.peek(new_pos as usize);
+            match square {
+                Square::Empty => {},
+                Square::Occupied(opp_piece) => match opp_piece {
+                    Piece::Pawn(c) => {
+                        if c != &cur {
+                            return true;
+                        }
+                        break;
+                    }
+                    _ => {}
+                },
+            }
+        }
+
+        false
+    }
+
     fn generate_moves(&mut self) {
         self.legal_moves.clear();
         self.attack_map = [false; 64];

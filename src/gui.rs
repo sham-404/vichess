@@ -126,7 +126,7 @@ impl GUI {
                 }
             }
         }
-        self.debug_square_drawing();
+        // self.debug_square_drawing();
     }
 
     fn draw_pieces(&self) {
@@ -243,13 +243,13 @@ impl BoardColor {
 
     pub fn blue() -> Self {
         Self {
-            light_square: hex("#C9D6DF"),     // pale mist
-            dark_square: hex("#7A97A8"),      // muted blue-gray
-            selected_piece: hex("#5FA8D3C0"), // soft icy blue highlight
-            possible_moves: hex("#A6C8E080"), // airy light blue
-            background: hex("#1E2A32"),       // deep desaturated navy
-            attacked: hex("#E0525280"),       // softened red (not harsh)
-            last_move: hex("#5FA8D360"),      // subtle echo glow
+            light_square: hex("#C9D6DF"),
+            dark_square: hex("#7A97A8"),
+            selected_piece: hex("#5FA8D3C0"),
+            possible_moves: hex("#A6C8E080"),
+            background: hex("#1E2A32"),
+            attacked: hex("#E0525280"),
+            last_move: hex("#5FA8D360"),
         }
     }
 }
