@@ -12,6 +12,7 @@ pub struct Game {
     board: Board,
     history: Vec<Move>,
     players: Vec<Player>,
+    king_pos: KingPos,
     cur_player: Player,
     legal_moves: Vec<Move>,
     attack_map: [bool; 64],
@@ -30,6 +31,10 @@ impl Game {
             board: Board::new(size),
             history: Vec::new(),
             players,
+            king_pos: KingPos {
+                white: 200,
+                black: 200,
+            },
             cur_player, // redo_list: Vec::new(),
             legal_moves: Vec::new(),
             attack_map: [false; 64],
@@ -107,6 +112,9 @@ impl Game {
             self.set(white_pos, kind(PieceColor::White));
             self.set(black_pos, kind(PieceColor::Black));
         }
+
+        self.king_pos.white = 3;
+        self.king_pos.black = 59;
 
         // generate moves after placing the pieces
         self.generate_moves();
@@ -422,7 +430,7 @@ impl Game {
             PieceColor::Black => [-7, -9],
         };
 
-        // if cur is white, check the bottom diags, cuz that is where that an opp 
+        // if cur is white, check the bottom diags, cuz that is where that an opp
         // pawn can attack from and vise versa
 
         for di in pawn_dirs {
@@ -500,6 +508,16 @@ impl Game {
 
         // Post move activities
 
+        // update king_pos if white king moved
+        if self.king_pos.white == from {
+            self.king_pos.white = to;
+        }
+
+        // update king_pos if black king moved
+        if self.king_pos.black == from {
+            self.king_pos.black = to;
+        }
+
         self.history.push(mov);
         self.change_turn(false);
         self.generate_moves();
@@ -534,6 +552,19 @@ impl Game {
             }
             _ => {}
         }
+
+        // Post undo activities
+
+        // update king_pos if white king moved
+        if self.king_pos.white == mov.to {
+            self.king_pos.white = mov.from;
+        }
+
+        // update king_pos if black king moved
+        if self.king_pos.black == mov.to {
+            self.king_pos.black = mov.from;
+        }
+
         self.change_turn(true);
         self.generate_moves();
     }
@@ -560,4 +591,10 @@ impl Player {
     pub fn new(color: PieceColor) -> Self {
         Self { color }
     }
+}
+
+#[derive(Debug)]
+struct KingPos {
+    white: usize,
+    black: usize,
 }
