@@ -472,6 +472,29 @@ impl Game {
                 Square::Empty => continue,
             }
         }
+        self.filter_illegal();
+    }
+
+    fn filter_illegal(&mut self) {
+        let moves = std::mem::take(&mut self.legal_moves);
+        let mut legal: Vec<Move> = Vec::new();
+        for mov in moves {
+            // move the piece
+            self.move_piece(&mov);
+
+            let king_pos = match self.cur_player.color {
+                PieceColor::White => self.king_pos.white,
+                PieceColor::Black => self.king_pos.black,
+            };
+
+            if !self.is_square_attacked(king_pos, self.cur_player.color) {
+                legal.push(mov);
+            }
+
+            self.unmove_piece(&mov);
+        }
+
+        self.legal_moves = legal;
     }
 
     pub fn make_move(&mut self, from: usize, to: usize) -> bool {
@@ -493,18 +516,7 @@ impl Game {
             None => return false,
         }; // filters if it is not a valid move
 
-        let square = self.board.get(mov.from);
-
-        let square = std::mem::replace(square, Square::Empty);
-        self.board.place(square, to);
-
-        // taking care of special moves
-        match mov.kind {
-            MoveKind::Promotion(p) => {
-                self.board.place_piece(to, p);
-            }
-            _ => {}
-        };
+        self.move_piece(&mov);
 
         // Post move activities
 
@@ -535,6 +547,39 @@ impl Game {
 
         let mov = self.history.pop().unwrap();
 
+        self.unmove_piece(&mov);
+        // Post undo activities
+
+        // update king_pos if white king moved
+        if self.king_pos.white == mov.to {
+            self.king_pos.white = mov.from;
+        }
+
+        // update king_pos if black king moved
+        if self.king_pos.black == mov.to {
+            self.king_pos.black = mov.from;
+        }
+
+        self.change_turn(true);
+        self.generate_moves();
+    }
+
+    fn move_piece(&mut self, mov: &Move) {
+        let square = self.board.get(mov.from);
+
+        let square = std::mem::replace(square, Square::Empty);
+        self.board.place(square, mov.to);
+
+        // taking care of special moves
+        match mov.kind {
+            MoveKind::Promotion(p) => {
+                self.board.place_piece(mov.to, p);
+            }
+            _ => {}
+        };
+    }
+
+    fn unmove_piece(&mut self, mov: &Move) {
         let square = self.board.get(mov.to);
         let square = std::mem::replace(square, Square::Empty);
         self.board.place(square, mov.from);
@@ -552,21 +597,6 @@ impl Game {
             }
             _ => {}
         }
-
-        // Post undo activities
-
-        // update king_pos if white king moved
-        if self.king_pos.white == mov.to {
-            self.king_pos.white = mov.from;
-        }
-
-        // update king_pos if black king moved
-        if self.king_pos.black == mov.to {
-            self.king_pos.black = mov.from;
-        }
-
-        self.change_turn(true);
-        self.generate_moves();
     }
 
     fn set(&mut self, idx: usize, piece: Piece) {

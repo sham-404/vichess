@@ -126,7 +126,7 @@ impl GUI {
                 }
             }
         }
-        // self.debug_square_drawing();
+        self.debug_square_drawing();
     }
 
     fn draw_pieces(&self) {
