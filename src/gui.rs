@@ -156,6 +156,7 @@ impl GUI {
         // attack squares
 
         for (idx, attack) in self.game.get_attack_map().iter().enumerate() {
+            let (x, y) = self.game.board().get_xy(idx);
             if *attack {
                 self.color_square(
                     self.game.col(idx) as f32,
@@ -163,6 +164,13 @@ impl GUI {
                     self.color.attacked,
                 );
             }
+            draw_text(
+                idx.to_string().as_str(),
+                x as f32 * self.tile_size,
+                y as f32 * self.tile_size + 12.0,
+                12.0,
+                BLACK,
+            );
         }
     }
 

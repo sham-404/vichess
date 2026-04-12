@@ -277,8 +277,13 @@ impl Game {
         }
     }
 
-    pub fn moves(&self, pos: usize) -> Vec<&Move> {
-        let moves = self.legal_moves.iter().filter(|&m| m.from == pos).collect();
+    pub fn moves(&self, pos: usize) -> Vec<Move> {
+        let moves = self
+            .legal_moves
+            .iter()
+            .filter(|&m| m.from == pos)
+            .cloned()
+            .collect();
         moves
     }
 
@@ -473,6 +478,9 @@ impl Game {
             }
         }
         self.filter_illegal();
+        if self.legal_moves.is_empty() {
+            println!("Pack it up buddy, you lost!");
+        }
     }
 
     fn filter_illegal(&mut self) {
@@ -481,13 +489,14 @@ impl Game {
         for mov in moves {
             // move the piece
             self.move_piece(&mov);
+            let color = self.cur_player.color;
 
             let king_pos = match self.cur_player.color {
                 PieceColor::White => self.king_pos.white,
                 PieceColor::Black => self.king_pos.black,
             };
 
-            if !self.is_square_attacked(king_pos, self.cur_player.color) {
+            if !self.is_square_attacked(king_pos, color) {
                 legal.push(mov);
             }
 
@@ -510,7 +519,7 @@ impl Game {
             return false;
         }
 
-        let moves = self.get_moves(piece, from);
+        let moves = self.moves(from);
         let mov = match moves.iter().find(|mov| mov.to == to) {
             Some(&m) => m,
             None => return false,
@@ -520,15 +529,7 @@ impl Game {
 
         // Post move activities
 
-        // update king_pos if white king moved
-        if self.king_pos.white == from {
-            self.king_pos.white = to;
-        }
-
-        // update king_pos if black king moved
-        if self.king_pos.black == from {
-            self.king_pos.black = to;
-        }
+        self.update_king(from, to);
 
         self.history.push(mov);
         self.change_turn(false);
@@ -550,18 +551,22 @@ impl Game {
         self.unmove_piece(&mov);
         // Post undo activities
 
-        // update king_pos if white king moved
-        if self.king_pos.white == mov.to {
-            self.king_pos.white = mov.from;
-        }
-
-        // update king_pos if black king moved
-        if self.king_pos.black == mov.to {
-            self.king_pos.black = mov.from;
-        }
+        self.update_king(mov.to, mov.from);
 
         self.change_turn(true);
         self.generate_moves();
+    }
+    
+    fn update_king(&mut self, from: usize, to: usize) {
+        // update king_pos if white king moved
+        if self.king_pos.white == from {
+            self.king_pos.white = to;
+        }
+
+        // update king_pos if black king moved
+        if self.king_pos.black == from {
+            self.king_pos.black = to;
+        }
     }
 
     fn move_piece(&mut self, mov: &Move) {
@@ -577,6 +582,9 @@ impl Game {
             }
             _ => {}
         };
+
+        // Post move activities
+        self.update_king(mov.from, mov.to);
     }
 
     fn unmove_piece(&mut self, mov: &Move) {
@@ -597,6 +605,9 @@ impl Game {
             }
             _ => {}
         }
+
+        self.update_king(mov.to, mov.from);
+
     }
 
     fn set(&mut self, idx: usize, piece: Piece) {
