@@ -345,132 +345,97 @@ impl Game {
 
     fn is_square_attacked(&self, pos: usize, cur: PieceColor) -> bool {
         let board = &self.board;
-        let diag = [9, 7, -7, -9];
-        for di in diag {
-            let mut cur_pos = pos;
-            for _ in 1..board.get_size() as i32 {
-                let new_pos = cur_pos as i32 + di;
 
-                if !Self::is_valid_step(cur_pos as i32, new_pos, di) {
-                    break;
-                }
+        // Sliding pieces
+        let directions = [
+            ([9, 7, -7, -9], true),  // diagonals
+            ([8, -8, 1, -1], false), // straight
+        ];
 
-                let square = board.peek(new_pos as usize);
-                match square {
-                    Square::Empty => {},
-                    Square::Occupied(opp_piece) => match opp_piece {
-                        Piece::Bishop(c) | Piece::Queen(c) => {
-                            if c != &cur {
-                                return true;
+        for (dirs, is_diag) in directions {
+            for di in dirs {
+                let mut cur_pos = pos;
+
+                loop {
+                    let new_pos = cur_pos as i32 + di;
+
+                    if !Self::is_valid_step(cur_pos as i32, new_pos, di) {
+                        break;
+                    }
+
+                    match board.peek(new_pos as usize) {
+                        Square::Empty => {
+                            cur_pos = new_pos as usize;
+                            continue;
+                        }
+                        Square::Occupied(p) => {
+                            if *p.color() != cur {
+                                match p {
+                                    Piece::Queen(_) => return true,
+                                    Piece::Bishop(_) if is_diag => return true,
+                                    Piece::Rook(_) if !is_diag => return true,
+                                    _ => {}
+                                }
                             }
                             break;
                         }
-                        _ => {}
-                    },
-                }
-                cur_pos = new_pos as usize;
-            }
-        }
-
-        let straight = [8, -8, 1, -1];
-        for di in straight {
-            let mut cur_pos = pos;
-            for _ in 1..board.get_size() as i32 {
-                let new_pos = cur_pos as i32 + di;
-
-                if !Self::is_valid_step(cur_pos as i32, new_pos, di) {
-                    break;
-                }
-
-                let square = board.peek(new_pos as usize);
-                match square {
-                    Square::Empty => {},
-                    Square::Occupied(opp_piece) => match opp_piece {
-                        Piece::Rook(c) | Piece::Queen(c) => {
-                            if c != &cur {
-                                return true;
-                            }
-                            break;
-                        }
-                        _ => {}
-                    },
-                }
-                cur_pos = new_pos as usize;
-            }
-        }
-
-        let all_dir = [8, -8, 1, -1, 9, 7, -7, -9];
-        for di in all_dir {
-            let cur_pos = pos;
-            let new_pos = cur_pos as i32 + di;
-
-            if !Self::is_valid_step(cur_pos as i32, new_pos, di) {
-                break;
-            }
-
-            let square = board.peek(new_pos as usize);
-            match square {
-                Square::Empty => {},
-                Square::Occupied(opp_piece) => match opp_piece {
-                    Piece::King(c) => {
-                        if c != &cur {
-                            return true;
-                        }
-                        break;
                     }
-                    _ => {}
-                },
+                }
             }
         }
 
-        let knight_dir = [17, 15, 10, 6, -6, -10, -15, -17];
-        for di in knight_dir {
-            let cur_pos = pos;
-            let new_pos = cur_pos as i32 + di;
+        // Knights
+        let knight_dirs = [17, 15, 10, 6, -6, -10, -15, -17];
+        for di in knight_dirs {
+            let new_pos = pos as i32 + di;
 
-            if !Self::is_valid_step(cur_pos as i32, new_pos, di) {
-                break;
+            if !Self::is_valid_step(pos as i32, new_pos, di) {
+                continue;
             }
 
-            let square = board.peek(new_pos as usize);
-            match square {
-                Square::Empty => {},
-                Square::Occupied(opp_piece) => match opp_piece {
-                    Piece::Knight(c) => {
-                        if c != &cur {
-                            return true;
-                        }
-                        break;
-                    }
-                    _ => {}
-                },
+            if let Square::Occupied(Piece::Knight(c)) = board.peek(new_pos as usize) {
+                if *c != cur {
+                    return true;
+                }
             }
         }
 
-        let pawn_attacks = match cur {
+        // King
+        let king_dirs = [8, -8, 1, -1, 9, 7, -7, -9];
+        for di in king_dirs {
+            let new_pos = pos as i32 + di;
+
+            if !Self::is_valid_step(pos as i32, new_pos, di) {
+                continue;
+            }
+
+            if let Square::Occupied(Piece::King(c)) = board.peek(new_pos as usize) {
+                if *c != cur {
+                    return true;
+                }
+            }
+        }
+
+        // Pawns
+        let pawn_dirs = match cur {
             PieceColor::White => [7, 9],
             PieceColor::Black => [-7, -9],
         };
-        for di in pawn_attacks {
-            let cur_pos = pos;
-            let new_pos = cur_pos as i32 + di;
 
-            if !Self::is_valid_step(cur_pos as i32, new_pos, di) {
-                break;
+        // if cur is white, check the bottom diags, cuz that is where that an opp 
+        // pawn can attack from and vise versa
+
+        for di in pawn_dirs {
+            let new_pos = pos as i32 + di;
+
+            if !Self::is_valid_step(pos as i32, new_pos, di) {
+                continue;
             }
 
-            let square = board.peek(new_pos as usize);
-            match square {
-                Square::Empty => {},
-                Square::Occupied(opp_piece) => match opp_piece {
-                    Piece::Pawn(c) => {
-                        if c != &cur {
-                            return true;
-                        }
-                        break;
-                    }
-                    _ => {}
-                },
+            if let Square::Occupied(Piece::Pawn(c)) = board.peek(new_pos as usize) {
+                if *c != cur {
+                    return true;
+                }
             }
         }
 
