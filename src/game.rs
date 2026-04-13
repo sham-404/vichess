@@ -27,7 +27,7 @@ impl Game {
         ];
         let cur_player = players[0];
 
-        let game = Self {
+        let mut game = Self {
             board: Board::new(size),
             history: Vec::new(),
             players,
@@ -39,6 +39,7 @@ impl Game {
             legal_moves: Vec::new(),
             attack_map: [false; 64],
         };
+        game.setup_board();
 
         game
     }
@@ -79,7 +80,7 @@ impl Game {
         self.cur_player = self.players[new_idx];
     }
 
-    pub fn setup_standard(&mut self) {
+    pub fn setup_board(&mut self) {
         // Pawns
         for col in 0..self.board.get_size() {
             let col = col as i32;
@@ -630,6 +631,10 @@ impl Game {
         }
 
         res
+    }
+
+    pub fn restart(&mut self) {
+        *self = Self::new(self.get_size());
     }
 
     fn set(&mut self, idx: usize, piece: Piece) {

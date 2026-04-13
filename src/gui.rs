@@ -45,19 +45,49 @@ impl GUI {
         }
     }
 
-    fn draw_game_over(&self) {
+    fn draw_game_over(&mut self) {
         let text = match self.state {
             GameState::CheckMate(winner) => match winner {
                 PieceColor::White => "White Wins!",
                 PieceColor::Black => "Black Wins!",
-
-            } 
+            },
             GameState::Draw => "Draw!",
-            _ => panic!("impossible, check draw_game_over()")
+            _ => panic!("impossible, check draw_game_over()"),
         };
 
-        draw_text(text, 100.0, 200.0, 50.0, RED);
-        draw_text("Press R to restart", 100.0, 260.0, 30.0, WHITE);
+        let width = screen_width();
+        let height = screen_height();
+
+        let pos_to_display = width.min(height) / 3.75 as f32;
+        let size_to_display = pos_to_display * 2 as f32;
+
+        draw_rectangle(
+            pos_to_display,
+            pos_to_display,
+            size_to_display,
+            size_to_display,
+            self.color.background,
+        );
+
+        draw_text(
+            text,
+            pos_to_display + 55.0,
+            pos_to_display + 100.0,
+            50.0,
+            RED,
+        );
+        draw_text(
+            "Press R to restart",
+            pos_to_display + 50.0,
+            pos_to_display + 200.0,
+            30.0,
+            WHITE,
+        );
+        if is_key_pressed(KeyCode::R) {
+            self.game.restart();
+            self.state = GameState::Playing;
+        }
+
     }
 
     pub fn handle_clicks(&mut self) {
