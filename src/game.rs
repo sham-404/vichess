@@ -556,7 +556,7 @@ impl Game {
         self.change_turn(true);
         self.generate_moves();
     }
-    
+
     fn update_king(&mut self, from: usize, to: usize) {
         // update king_pos if white king moved
         if self.king_pos.white == from {
@@ -607,7 +607,29 @@ impl Game {
         }
 
         self.update_king(mov.to, mov.from);
+    }
 
+    pub fn get_game_state(&self) -> GameState {
+        let mut res: GameState = GameState::Draw;
+
+        if self.legal_moves.is_empty() {
+            match self.cur_player.color {
+                PieceColor::Black => {
+                    if self.attack_map[self.king_pos.black] {
+                        res = GameState::CheckMate(PieceColor::White);
+                    }
+                }
+                PieceColor::White => {
+                    if self.attack_map[self.king_pos.white] {
+                        res = GameState::CheckMate(PieceColor::Black);
+                    }
+                }
+            }
+        } else {
+            res = GameState::Playing;
+        }
+
+        res
     }
 
     fn set(&mut self, idx: usize, piece: Piece) {
@@ -638,4 +660,10 @@ impl Player {
 struct KingPos {
     white: usize,
     black: usize,
+}
+
+pub enum GameState {
+    Playing,
+    CheckMate(PieceColor),
+    Draw,
 }

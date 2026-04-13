@@ -1,7 +1,7 @@
 use macroquad::prelude::*;
 
 use crate::{
-    game::{Game, Square},
+    game::{Game, GameState, Square},
     piece::PieceColor,
 };
 
@@ -10,6 +10,7 @@ pub struct GUI {
     tile_size: f32,
     selected_pos: Option<usize>,
     color: BoardColor,
+    state: GameState,
 }
 
 impl GUI {
@@ -20,17 +21,43 @@ impl GUI {
             selected_pos: None,
             tile_size,
             color: BoardColor::dark(),
+            state: GameState::Playing,
         }
     }
 
     pub async fn run(&mut self) {
         loop {
             clear_background(self.color.background);
-            self.draw_board();
-            self.draw_pieces();
-            self.handle_clicks();
+
+            match self.state {
+                GameState::Playing => {
+                    self.draw_board();
+                    self.draw_pieces();
+                    self.handle_clicks();
+                }
+                GameState::CheckMate(_) | GameState::Draw => {
+                    self.draw_board();
+                    self.draw_pieces();
+                    self.draw_game_over();
+                }
+            }
             next_frame().await;
         }
+    }
+
+    fn draw_game_over(&self) {
+        let text = match self.state {
+            GameState::CheckMate(winner) => match winner {
+                PieceColor::White => "White Wins!",
+                PieceColor::Black => "Black Wins!",
+
+            } 
+            GameState::Draw => "Draw!",
+            _ => panic!("impossible, check draw_game_over()")
+        };
+
+        draw_text(text, 100.0, 200.0, 50.0, RED);
+        draw_text("Press R to restart", 100.0, 260.0, 30.0, WHITE);
     }
 
     pub fn handle_clicks(&mut self) {
@@ -59,6 +86,9 @@ impl GUI {
             Some(pos) => {
                 if self.game.make_move(pos, new_pos) {
                     self.selected_pos = None;
+
+                    // update game state after moving
+                    self.state = self.game.get_game_state();
                 } else {
                     self.selected_pos = Some(new_pos);
                 }
