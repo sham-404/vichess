@@ -9,6 +9,7 @@ pub struct GUI {
     game: Game,
     tile_size: f32,
     selected_pos: Option<usize>,
+    theme: Theme,
     color: BoardColor,
     state: GameState,
 }
@@ -20,6 +21,7 @@ impl GUI {
             game: game,
             selected_pos: None,
             tile_size,
+            theme: Theme::Dark,
             color: BoardColor::dark(),
             state: GameState::Playing,
         }
@@ -43,6 +45,11 @@ impl GUI {
             }
             next_frame().await;
         }
+    }
+
+    fn change_theme(&mut self) {
+        self.theme = self.theme.next();
+        self.color = self.theme.get_colors();
     }
 
     fn draw_game_over(&mut self) {
@@ -87,44 +94,49 @@ impl GUI {
             self.game.restart();
             self.state = GameState::Playing;
         }
-
     }
 
     pub fn handle_clicks(&mut self) {
-        if !is_mouse_button_pressed(MouseButton::Left) {
-            if is_mouse_button_pressed(MouseButton::Right) {
-                self.game.undo_move();
+        // Undo move
+        if is_mouse_button_pressed(MouseButton::Right) {
+            self.game.undo_move();
+        }
+
+        // Selection and handling clicks and moves
+        if is_mouse_button_pressed(MouseButton::Left) {
+            let (x, y) = mouse_position();
+            let col = (x / self.tile_size) as usize;
+            let row = (y / self.tile_size) as usize;
+
+            if col > self.game.get_size() - 1 || row > self.game.get_size() - 1 {
+                return;
             }
-            return;
-        }
 
-        let (x, y) = mouse_position();
-        let col = (x / self.tile_size) as usize;
-        let row = (y / self.tile_size) as usize;
+            let new_pos = self.game.board().idx(row as i32, col as i32);
 
-        if col > self.game.get_size() - 1 || row > self.game.get_size() - 1 {
-            return;
-        }
+            if !self.game.board().within_bounds(new_pos) {
+                return;
+            }
 
-        let new_pos = self.game.board().idx(row as i32, col as i32);
+            match self.selected_pos {
+                Some(pos) => {
+                    if self.game.make_move(pos, new_pos) {
+                        self.selected_pos = None;
 
-        if !self.game.board().within_bounds(new_pos) {
-            return;
-        }
-
-        match self.selected_pos {
-            Some(pos) => {
-                if self.game.make_move(pos, new_pos) {
-                    self.selected_pos = None;
-
-                    // update game state after moving
-                    self.state = self.game.get_game_state();
-                } else {
-                    self.selected_pos = Some(new_pos);
+                        // update game state after moving
+                        self.state = self.game.get_game_state();
+                    } else {
+                        self.selected_pos = Some(new_pos);
+                    }
                 }
+                None => self.selected_pos = Some(new_pos),
             }
-            None => self.selected_pos = Some(new_pos),
         }
+
+        if alt_down() && is_key_pressed(KeyCode::C) {
+            self.change_theme();
+        }
+
     }
 
     pub fn draw_board(&mut self) {
@@ -244,6 +256,11 @@ impl GUI {
             color,
         );
     }
+
+}
+
+fn alt_down() -> bool {
+    is_key_down(KeyCode::LeftAlt) || is_key_down(KeyCode::RightAlt)
 }
 
 fn hex(hex: &str) -> Color {
@@ -319,6 +336,33 @@ impl BoardColor {
             background: hex("#1E2A32"),
             attacked: hex("#E0525280"),
             last_move: hex("#5FA8D360"),
+        }
+    }
+}
+
+pub enum Theme {
+    Matte,
+    Dark,
+    Classic,
+    Blue,
+}
+
+impl Theme {
+    pub fn get_colors(&self) -> BoardColor {
+        match self {
+            Theme::Matte => BoardColor::matte(),
+            Theme::Dark => BoardColor::dark(),
+            Theme::Classic => BoardColor::classic(),
+            Theme::Blue => BoardColor::blue(),
+        }
+    }
+
+    pub fn next(&self) -> Self {
+        match self {
+            Theme::Matte => Theme::Dark,
+            Theme::Dark => Theme::Classic,
+            Theme::Classic => Theme::Blue,
+            Theme::Blue => Theme::Matte,
         }
     }
 }
