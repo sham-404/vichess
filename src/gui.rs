@@ -137,7 +137,6 @@ impl GUI {
         if alt_down() && is_key_pressed(KeyCode::C) {
             self.change_theme();
         }
-
     }
 
     pub fn draw_board(&mut self) {
@@ -257,7 +256,6 @@ impl GUI {
             color,
         );
     }
-
 }
 
 fn alt_down() -> bool {

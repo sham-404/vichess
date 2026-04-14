@@ -502,21 +502,19 @@ impl Game {
             PieceColor::Black => BK_START_POS,
         };
 
+        // return true if king is in start pos 
+        // king is not in attack 
+        // adjacent squares are Empty
+        // rook is in place 
+        // adjacent Empty squares are not in attack
+        
         start_pos == k_pos
-        && !self.attack_map[k_pos] 
-        // King is in start pos and not in check
-
-        && self.board.peek(k_pos - 1) == &Square::Empty 
-        && self.board.peek(k_pos - 2) == &Square::Empty
-        // Adjacent squares are empty
-
-        && self.board.peek(k_pos - 3)
-        == &Square::Occupied(Piece::Rook(color))
-        // Rook is in place
-
-        && !self.attack_map[k_pos - 1]
-        && !self.attack_map[k_pos - 2]
-        // Adjacent squares are not in attack
+            && !self.attack_map[k_pos]
+            && self.board.peek(k_pos - 1) == &Square::Empty
+            && self.board.peek(k_pos - 2) == &Square::Empty
+            && self.board.peek(k_pos - 3) == &Square::Occupied(Piece::Rook(color))
+            && !self.attack_map[k_pos - 1]
+            && !self.attack_map[k_pos - 2]
     }
 
     fn can_castle_queenside(&self, k_pos: usize, color: PieceColor) -> bool {
@@ -525,21 +523,19 @@ impl Game {
             PieceColor::Black => BK_START_POS,
         };
 
+        // return true if king is in start pos 
+        // king is not in attack 
+        // adjacent squares are Empty
+        // rook is in place 
+        // adjacent Empty squares are not in attack
+
         start_pos == k_pos
-        && !self.attack_map[k_pos] 
-        // King is in start pos and not in check
-
-        && self.board.peek(k_pos + 1) == &Square::Empty 
-        && self.board.peek(k_pos + 2) == &Square::Empty
-        // Adjacent squares are empty
-
-        && self.board.peek(k_pos + 4)
-        == &Square::Occupied(Piece::Rook(PieceColor::White))
-        // Rook is in place
-
-        && !self.attack_map[k_pos + 1]
-        && !self.attack_map[k_pos + 2]
-        // Adjacent squares are not in attack
+            && !self.attack_map[k_pos]
+            && self.board.peek(k_pos + 1) == &Square::Empty
+            && self.board.peek(k_pos + 2) == &Square::Empty
+            && self.board.peek(k_pos + 4) == &Square::Occupied(Piece::Rook(PieceColor::White))
+            && !self.attack_map[k_pos + 1]
+            && !self.attack_map[k_pos + 2]
     }
 
     fn gen_castling_moves(&mut self) {
@@ -759,7 +755,6 @@ impl Game {
         (idx % self.board.get_size()) as i32
     }
 }
-
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub struct Player {
     color: PieceColor,
