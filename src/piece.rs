@@ -69,7 +69,16 @@ impl Move {
 
     pub fn with_capture(mut self, piece: Piece) -> Self {
         self.capture = Some(piece);
-        self.kind = MoveKind::Capture;
+        self
+    }
+
+    pub fn with_castle_king(mut self) -> Self {
+        self.kind = MoveKind::CastleKing;
+        self
+    }
+
+    pub fn with_castle_queen(mut self) -> Self {
+        self.kind = MoveKind::CastleQueen;
         self
     }
 
@@ -82,7 +91,6 @@ impl Move {
 #[allow(dead_code)]
 pub enum MoveKind {
     Normal,
-    Capture,
     CastleKing,
     CastleQueen,
     Promotion(Piece),

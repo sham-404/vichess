@@ -16,8 +16,12 @@ pub struct Game {
     cur_player: Player,
     legal_moves: Vec<Move>,
     attack_map: [bool; 64],
+    castling: CastlingRights,
     // redo_list: Vec<Move>,
 }
+
+const WK_START_POS: usize = 3;
+const BK_START_POS: usize = 59;
 
 impl Game {
     pub fn new(size: usize) -> Self {
@@ -34,6 +38,12 @@ impl Game {
             king_pos: KingPos {
                 white: 200,
                 black: 200,
+            },
+            castling: CastlingRights {
+                white_kingside: true,
+                white_queenside: true,
+                black_kingside: true,
+                black_queenside: true,
             },
             cur_player, // redo_list: Vec::new(),
             legal_moves: Vec::new(),
@@ -478,9 +488,109 @@ impl Game {
                 Square::Empty => continue,
             }
         }
+
+        self.gen_castling_moves();
         self.filter_illegal();
         if self.legal_moves.is_empty() {
             println!("Pack it up buddy, you lost!");
+        }
+    }
+
+    fn can_castle_kingside(&self, k_pos: usize, color: PieceColor) -> bool {
+        let start_pos = match color {
+            PieceColor::White => WK_START_POS,
+            PieceColor::Black => BK_START_POS,
+        };
+
+        start_pos == k_pos
+        && !self.attack_map[k_pos] 
+        // King is in start pos and not in check
+
+        && self.board.peek(k_pos - 1) == &Square::Empty 
+        && self.board.peek(k_pos - 2) == &Square::Empty
+        // Adjacent squares are empty
+
+        && self.board.peek(k_pos - 3)
+        == &Square::Occupied(Piece::Rook(color))
+        // Rook is in place
+
+        && !self.attack_map[k_pos - 1]
+        && !self.attack_map[k_pos - 2]
+        // Adjacent squares are not in attack
+    }
+
+    fn can_castle_queenside(&self, k_pos: usize, color: PieceColor) -> bool {
+        let start_pos = match color {
+            PieceColor::White => WK_START_POS,
+            PieceColor::Black => BK_START_POS,
+        };
+
+        start_pos == k_pos
+        && !self.attack_map[k_pos] 
+        // King is in start pos and not in check
+
+        && self.board.peek(k_pos + 1) == &Square::Empty 
+        && self.board.peek(k_pos + 2) == &Square::Empty
+        // Adjacent squares are empty
+
+        && self.board.peek(k_pos + 4)
+        == &Square::Occupied(Piece::Rook(PieceColor::White))
+        // Rook is in place
+
+        && !self.attack_map[k_pos + 1]
+        && !self.attack_map[k_pos + 2]
+        // Adjacent squares are not in attack
+    }
+
+    fn gen_castling_moves(&mut self) {
+        match self.cur_player.color {
+            PieceColor::White => {
+                // cheking castling possibility for white king side
+                if !self.castling.white_kingside {
+                    return;
+                }
+
+                let k_pos = self.king_pos.white;
+
+                if self.can_castle_kingside(k_pos, PieceColor::White) {
+                    self.legal_moves
+                        .push(Move::new(k_pos, k_pos - 2).with_castle_king());
+                }
+
+                // cheking castling possibility for white queen side
+                if !self.castling.white_queenside {
+                    return;
+                }
+
+                if self.can_castle_queenside(k_pos, PieceColor::White) {
+                    self.legal_moves
+                        .push(Move::new(k_pos, k_pos + 2).with_castle_queen());
+                }
+            }
+
+            PieceColor::Black => {
+                // cheking castling possibility for black king side
+                if !self.castling.black_kingside {
+                    return;
+                }
+
+                let k_pos = self.king_pos.black;
+
+                if self.can_castle_kingside(k_pos, PieceColor::Black) {
+                    self.legal_moves
+                        .push(Move::new(k_pos, k_pos - 2).with_castle_king());
+                }
+
+                // cheking castling possibility for black queen side
+                if !self.castling.black_queenside {
+                    return;
+                }
+
+                if self.can_castle_queenside(k_pos, PieceColor::Black) {
+                    self.legal_moves
+                        .push(Move::new(k_pos, k_pos + 2).with_castle_queen());
+                }
+            }
         }
     }
 
@@ -671,4 +781,12 @@ pub enum GameState {
     Playing,
     CheckMate(PieceColor),
     Draw,
+}
+
+#[derive(Debug)]
+struct CastlingRights {
+    white_kingside: bool,
+    white_queenside: bool,
+    black_kingside: bool,
+    black_queenside: bool,
 }
