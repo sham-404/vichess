@@ -133,6 +133,7 @@ impl GUI {
             }
         }
 
+        // changing themes
         if alt_down() && is_key_pressed(KeyCode::C) {
             self.change_theme();
         }
