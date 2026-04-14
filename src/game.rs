@@ -502,12 +502,12 @@ impl Game {
             PieceColor::Black => BK_START_POS,
         };
 
-        // return true if king is in start pos 
-        // king is not in attack 
+        // return true if king is in start pos
+        // king is not in attack
         // adjacent squares are Empty
-        // rook is in place 
+        // rook is in place
         // adjacent Empty squares are not in attack
-        
+
         start_pos == k_pos
             && !self.attack_map[k_pos]
             && self.board.peek(k_pos - 1) == &Square::Empty
@@ -523,10 +523,10 @@ impl Game {
             PieceColor::Black => BK_START_POS,
         };
 
-        // return true if king is in start pos 
-        // king is not in attack 
+        // return true if king is in start pos
+        // king is not in attack
         // adjacent squares are Empty
-        // rook is in place 
+        // rook is in place
         // adjacent Empty squares are not in attack
 
         start_pos == k_pos
@@ -687,6 +687,22 @@ impl Game {
             MoveKind::Promotion(p) => {
                 self.board.place_piece(mov.to, p);
             }
+            MoveKind::CastleKing => {
+                if let Square::Occupied(Piece::King(color)) = square {
+                    match color {
+                        PieceColor::White => self.move_piece(&Move::new(0, 2)),
+                        PieceColor::Black => self.move_piece(&Move::new(56, 58)),
+                    }
+                }
+            }
+            MoveKind::CastleQueen => {
+                if let Square::Occupied(Piece::King(color)) = square {
+                    match color {
+                        PieceColor::White => self.move_piece(&Move::new(4, 7)),
+                        PieceColor::Black => self.move_piece(&Move::new(63, 60)),
+                    }
+                }
+            }
             _ => {}
         };
 
@@ -709,6 +725,22 @@ impl Game {
             MoveKind::Normal => {}
             MoveKind::Promotion(p) => {
                 self.board.place_piece(mov.from, Piece::Pawn(*p.color()));
+            }
+            MoveKind::CastleKing => {
+                if let Square::Occupied(Piece::King(color)) = square {
+                    match color {
+                        PieceColor::White => self.move_piece(&Move::new(2, 0)),
+                        PieceColor::Black => self.move_piece(&Move::new(58, 56)),
+                    }
+                }
+            }
+            MoveKind::CastleQueen => {
+                if let Square::Occupied(Piece::King(color)) = square {
+                    match color {
+                        PieceColor::White => self.move_piece(&Move::new(7, 4)),
+                        PieceColor::Black => self.move_piece(&Move::new(60, 63)),
+                    }
+                }
             }
             _ => {}
         }
