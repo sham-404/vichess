@@ -173,10 +173,13 @@ impl Game {
 
                 let square = board.peek(new_pos as usize);
                 match square {
-                    Square::Empty => moves.push(Move::new(pos, new_pos as usize)),
+                    Square::Empty => moves.push(Move::new(pos, new_pos as usize, self.castling)),
                     Square::Occupied(opp_piece) => {
                         if piece.color() != opp_piece.color() {
-                            moves.push(Move::new(pos, new_pos as usize).with_capture(*opp_piece));
+                            moves.push(
+                                Move::new(pos, new_pos as usize, self.castling)
+                                    .with_capture(*opp_piece),
+                            );
                         }
                         break;
                     }
@@ -208,7 +211,7 @@ impl Game {
         let one = pos + forward;
         if one >= 0 && one < 64 {
             if matches!(self.board.peek(one as usize), Square::Empty) {
-                let mut cur_move = Move::new(pos as usize, one as usize);
+                let mut cur_move = Move::new(pos as usize, one as usize, self.castling);
 
                 // Checking if it is the promotion square
                 match pawn.color() {
@@ -232,7 +235,7 @@ impl Game {
                         && two < 64
                         && matches!(self.board.peek(two as usize), Square::Empty)
                     {
-                        moves.push(Move::new(pos as usize, two as usize));
+                        moves.push(Move::new(pos as usize, two as usize, self.castling));
                     }
                 }
             }
@@ -258,8 +261,8 @@ impl Game {
             match square {
                 Square::Occupied(opp_piece) => {
                     if opp_piece.color() != pawn.color() {
-                        let mut cur_move =
-                            Move::new(pos as usize, target as usize).with_capture(*opp_piece);
+                        let mut cur_move = Move::new(pos as usize, target as usize, self.castling)
+                            .with_capture(*opp_piece);
 
                         // Checking if it is the promotion square
                         match pawn.color() {
@@ -553,7 +556,7 @@ impl Game {
 
                 if self.can_castle_kingside(k_pos, PieceColor::White) {
                     self.legal_moves
-                        .push(Move::new(k_pos, k_pos - 2).with_castle_king());
+                        .push(Move::new(k_pos, k_pos - 2, self.castling).with_castle_king());
                 }
 
                 // cheking castling possibility for white queen side
@@ -563,7 +566,7 @@ impl Game {
 
                 if self.can_castle_queenside(k_pos, PieceColor::White) {
                     self.legal_moves
-                        .push(Move::new(k_pos, k_pos + 2).with_castle_queen());
+                        .push(Move::new(k_pos, k_pos + 2, self.castling).with_castle_queen());
                 }
             }
 
@@ -577,7 +580,7 @@ impl Game {
 
                 if self.can_castle_kingside(k_pos, PieceColor::Black) {
                     self.legal_moves
-                        .push(Move::new(k_pos, k_pos - 2).with_castle_king());
+                        .push(Move::new(k_pos, k_pos - 2, self.castling).with_castle_king());
                 }
 
                 // cheking castling possibility for black queen side
@@ -587,7 +590,7 @@ impl Game {
 
                 if self.can_castle_queenside(k_pos, PieceColor::Black) {
                     self.legal_moves
-                        .push(Move::new(k_pos, k_pos + 2).with_castle_queen());
+                        .push(Move::new(k_pos, k_pos + 2, self.castling).with_castle_queen());
                 }
             }
         }
@@ -661,6 +664,7 @@ impl Game {
         self.unmove_piece(&mov);
         // Post undo activities
 
+        self.castling = mov.prev_castle_rights;
         self.update_king(mov.to, mov.from);
 
         self.change_turn(true);
@@ -694,12 +698,12 @@ impl Game {
                 if let Square::Occupied(Piece::King(color)) = square {
                     match color {
                         PieceColor::White => {
-                            self.move_piece(&Move::new(0, 2));
-                            // self.castling.remove(WK);
+                            self.move_piece(&Move::new(0, 2, self.castling));
+                            self.castling.remove(WK);
                         }
                         PieceColor::Black => {
-                            self.move_piece(&Move::new(56, 58));
-                            // self.castling.remove(BK);
+                            self.move_piece(&Move::new(56, 58, self.castling));
+                            self.castling.remove(BK);
                         }
                     }
                 }
@@ -708,12 +712,12 @@ impl Game {
                 if let Square::Occupied(Piece::King(color)) = square {
                     match color {
                         PieceColor::White => {
-                            self.move_piece(&Move::new(7, 4));
-                            // self.castling.remove(WQ);
+                            self.move_piece(&Move::new(7, 4, self.castling));
+                            self.castling.remove(WQ);
                         }
                         PieceColor::Black => {
-                            self.move_piece(&Move::new(63, 60));
-                            // self.castling.remove(BQ);
+                            self.move_piece(&Move::new(63, 60, self.castling));
+                            self.castling.remove(BQ);
                         }
                     }
                 }
@@ -744,16 +748,28 @@ impl Game {
             MoveKind::CastleKing => {
                 if let Square::Occupied(Piece::King(color)) = square {
                     match color {
-                        PieceColor::White => self.move_piece(&Move::new(2, 0)),
-                        PieceColor::Black => self.move_piece(&Move::new(58, 56)),
+                        PieceColor::White => {
+                            self.move_piece(&Move::new(2, 0, self.castling));
+                            self.castling.add(WK);
+                        }
+                        PieceColor::Black => {
+                            self.move_piece(&Move::new(58, 56, self.castling));
+                            self.castling.add(BK);
+                        }
                     }
                 }
             }
             MoveKind::CastleQueen => {
                 if let Square::Occupied(Piece::King(color)) = square {
                     match color {
-                        PieceColor::White => self.move_piece(&Move::new(4, 7)),
-                        PieceColor::Black => self.move_piece(&Move::new(60, 63)),
+                        PieceColor::White => {
+                            self.move_piece(&Move::new(4, 7, self.castling));
+                            self.castling.add(WQ);
+                        }
+                        PieceColor::Black => {
+                            self.move_piece(&Move::new(60, 63, self.castling));
+                            self.castling.add(BQ);
+                        }
                     }
                 }
             }
@@ -854,7 +870,7 @@ impl CastlingRights {
         self.0 &= !mask;
     }
 
-    pub fn _add(&mut self, mask: u8) {
+    pub fn add(&mut self, mask: u8) {
         self.0 |= mask;
     }
 }

@@ -1,3 +1,5 @@
+use crate::game::CastlingRights;
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Piece {
     King(PieceColor),
@@ -55,23 +57,18 @@ pub struct Move {
     pub to: usize,
     pub capture: Option<Piece>,
     pub kind: MoveKind,
-    pub prev_castle_rights: u8,
+    pub prev_castle_rights: CastlingRights,
 }
 
 impl Move {
-    pub fn new(from: usize, to: usize) -> Self {
+    pub fn new(from: usize, to: usize, castle: CastlingRights) -> Self {
         Self {
             from,
             to,
             capture: None,
             kind: MoveKind::Normal,
-            prev_castle_rights: 0b1111,
+            prev_castle_rights: castle,
         }
-    }
-
-    pub fn with_castle(mut self, castle: u8) -> Self {
-        self.prev_castle_rights = castle;
-        self
     }
 
     pub fn with_capture(mut self, piece: Piece) -> Self {
