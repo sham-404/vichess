@@ -1,6 +1,11 @@
 use crate::board::Board;
 use crate::piece::{Move, MoveKind, Piece, PieceColor};
 
+pub const WK: u8 = 0b0001;
+pub const WQ: u8 = 0b0010;
+pub const BK: u8 = 0b0100;
+pub const BQ: u8 = 0b1000;
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Square {
     Empty,
@@ -39,12 +44,7 @@ impl Game {
                 white: 200,
                 black: 200,
             },
-            castling: CastlingRights {
-                white_kingside: true,
-                white_queenside: true,
-                black_kingside: true,
-                black_queenside: true,
-            },
+            castling: CastlingRights::new(),
             cur_player, // redo_list: Vec::new(),
             legal_moves: Vec::new(),
             attack_map: [false; 64],
@@ -545,7 +545,7 @@ impl Game {
         match self.cur_player.color {
             PieceColor::White => {
                 // cheking castling possibility for white king side
-                if !self.castling.white_kingside {
+                if !self.castling.white_kingside() {
                     return;
                 }
 
@@ -557,7 +557,7 @@ impl Game {
                 }
 
                 // cheking castling possibility for white queen side
-                if !self.castling.white_queenside {
+                if !self.castling.white_queenside() {
                     return;
                 }
 
@@ -569,7 +569,7 @@ impl Game {
 
             PieceColor::Black => {
                 // cheking castling possibility for black king side
-                if !self.castling.black_kingside {
+                if !self.castling.black_kingside() {
                     return;
                 }
 
@@ -581,7 +581,7 @@ impl Game {
                 }
 
                 // cheking castling possibility for black queen side
-                if !self.castling.black_queenside {
+                if !self.castling.black_queenside() {
                     return;
                 }
 
@@ -693,16 +693,28 @@ impl Game {
             MoveKind::CastleKing => {
                 if let Square::Occupied(Piece::King(color)) = square {
                     match color {
-                        PieceColor::White => self.move_piece(&Move::new(0, 2)),
-                        PieceColor::Black => self.move_piece(&Move::new(56, 58)),
+                        PieceColor::White => {
+                            self.move_piece(&Move::new(0, 2));
+                            // self.castling.remove(WK);
+                        }
+                        PieceColor::Black => {
+                            self.move_piece(&Move::new(56, 58));
+                            // self.castling.remove(BK);
+                        }
                     }
                 }
             }
             MoveKind::CastleQueen => {
                 if let Square::Occupied(Piece::King(color)) = square {
                     match color {
-                        PieceColor::White => self.move_piece(&Move::new(7, 4)),
-                        PieceColor::Black => self.move_piece(&Move::new(63, 60)),
+                        PieceColor::White => {
+                            self.move_piece(&Move::new(7, 4));
+                            // self.castling.remove(WQ);
+                        }
+                        PieceColor::Black => {
+                            self.move_piece(&Move::new(63, 60));
+                            // self.castling.remove(BQ);
+                        }
                     }
                 }
             }
@@ -813,10 +825,36 @@ pub enum GameState {
     Draw,
 }
 
-#[derive(Debug)]
-struct CastlingRights {
-    white_kingside: bool,
-    white_queenside: bool,
-    black_kingside: bool,
-    black_queenside: bool,
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+pub struct CastlingRights(pub u8);
+
+impl CastlingRights {
+    pub fn new() -> Self {
+        Self(WK | WQ | BK | BQ)
+    }
+
+    pub fn white_kingside(self) -> bool {
+        self.0 & WK != 0
+    }
+
+    pub fn white_queenside(self) -> bool {
+        self.0 & WQ != 0
+    }
+
+    pub fn black_kingside(self) -> bool {
+        self.0 & BK != 0
+    }
+
+    pub fn black_queenside(self) -> bool {
+        self.0 & BQ != 0
+    }
+
+    // --- remove rights ---
+    pub fn remove(&mut self, mask: u8) {
+        self.0 &= !mask;
+    }
+
+    pub fn _add(&mut self, mask: u8) {
+        self.0 |= mask;
+    }
 }
