@@ -642,6 +642,37 @@ impl Game {
 
         // Post move activities
 
+        // Handling castling rights
+        match self.cur_player.color {
+            PieceColor::White => {
+                if self.castling.white_kingside() {
+                    if mov.from == 3 || mov.from == 0 || mov.to == 0 {
+                        self.castling.remove(WK);
+                    }
+                }
+
+                if self.castling.white_queenside() {
+                    if mov.from == 3 || mov.from == 7 || mov.to == 7 {
+                        self.castling.remove(WQ);
+                    }
+                }
+            }
+
+            PieceColor::Black => {
+                if self.castling.black_kingside() {
+                    if mov.from == 59 || mov.from == 56 || mov.to == 56 {
+                        self.castling.remove(BK);
+                    }
+                }
+
+                if self.castling.black_queenside() {
+                    if mov.from == 59 || mov.from == 63 || mov.to == 63 {
+                        self.castling.remove(BQ);
+                    }
+                }
+            }
+        }
+
         self.update_king(from, to);
 
         self.history.push(mov);
@@ -699,11 +730,9 @@ impl Game {
                     match color {
                         PieceColor::White => {
                             self.move_piece(&Move::new(0, 2, self.castling));
-                            self.castling.remove(WK);
                         }
                         PieceColor::Black => {
                             self.move_piece(&Move::new(56, 58, self.castling));
-                            self.castling.remove(BK);
                         }
                     }
                 }
@@ -713,11 +742,9 @@ impl Game {
                     match color {
                         PieceColor::White => {
                             self.move_piece(&Move::new(7, 4, self.castling));
-                            self.castling.remove(WQ);
                         }
                         PieceColor::Black => {
                             self.move_piece(&Move::new(63, 60, self.castling));
-                            self.castling.remove(BQ);
                         }
                     }
                 }
