@@ -151,7 +151,10 @@ impl Game {
 
             8 | -8 => true,
 
-            _ => true,
+            17 | 10 | -6 | -15 => f2 > f1,
+            15 | 6 | -10 | -17 => f2 < f1,
+
+            _ => false,
         }
     }
 
@@ -533,7 +536,7 @@ impl Game {
             && !self.attack_map[k_pos]
             && self.board.peek(k_pos + 1) == &Square::Empty
             && self.board.peek(k_pos + 2) == &Square::Empty
-            && self.board.peek(k_pos + 4) == &Square::Occupied(Piece::Rook(PieceColor::White))
+            && self.board.peek(k_pos + 4) == &Square::Occupied(Piece::Rook(color))
             && !self.attack_map[k_pos + 1]
             && !self.attack_map[k_pos + 2]
     }
@@ -698,7 +701,7 @@ impl Game {
             MoveKind::CastleQueen => {
                 if let Square::Occupied(Piece::King(color)) = square {
                     match color {
-                        PieceColor::White => self.move_piece(&Move::new(4, 7)),
+                        PieceColor::White => self.move_piece(&Move::new(7, 4)),
                         PieceColor::Black => self.move_piece(&Move::new(63, 60)),
                     }
                 }
@@ -737,7 +740,7 @@ impl Game {
             MoveKind::CastleQueen => {
                 if let Square::Occupied(Piece::King(color)) = square {
                     match color {
-                        PieceColor::White => self.move_piece(&Move::new(7, 4)),
+                        PieceColor::White => self.move_piece(&Move::new(4, 7)),
                         PieceColor::Black => self.move_piece(&Move::new(60, 63)),
                     }
                 }
