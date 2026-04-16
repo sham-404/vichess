@@ -92,6 +92,94 @@ impl Game {
         self.cur_player = self.players[new_idx];
     }
 
+    pub fn load_fen(&mut self, fen: &str) {
+        let parts: Vec<&str> = fen.split_whitespace().collect();
+
+        //  Clear board
+        self.board = Board::new(self.get_size());
+
+        // 2. Piece placement
+        let mut idx = 0;
+
+        for ch in parts[0].chars() {
+            match ch {
+                '/' => continue,
+
+                '1'..='8' => {
+                    let empty = ch.to_digit(10).unwrap();
+                    idx += empty as usize;
+                }
+
+                _ => {
+                    let color = if ch.is_uppercase() {
+                        PieceColor::White
+                    } else {
+                        PieceColor::Black
+                    };
+
+                    let piece = match ch.to_ascii_lowercase() {
+                        'k' => Piece::King(color),
+                        'q' => Piece::Queen(color),
+                        'r' => Piece::Rook(color),
+                        'b' => Piece::Bishop(color),
+                        'n' => Piece::Knight(color),
+                        'p' => Piece::Pawn(color),
+                        _ => panic!("Invalid FEN character"),
+                    };
+
+                    self.set(idx, piece);
+                    idx += 1;
+                }
+            }
+        }
+
+        // --- 3. Side to move ---
+        let color = match parts[1] {
+            "w" => PieceColor::White,
+            "b" => PieceColor::Black,
+            _ => panic!("Invalid side to move"),
+        };
+
+        self.cur_player = match self.players.iter().find(|&p| p.color == color) {
+            Some(p) => *p,
+            None => unreachable!("if reacheched, check load_fen"),
+        };
+
+        // --- 4. Castling rights ---
+        self.castling.remove(WK | WQ | BK | BQ); // however you store it
+
+        if parts[2] != "-" {
+            for ch in parts[2].chars() {
+                match ch {
+                    'K' => self.castling.add(WK),
+                    'Q' => self.castling.add(WQ),
+                    'k' => self.castling.add(BK),
+                    'q' => self.castling.add(BQ),
+                    _ => {}
+                }
+            }
+        }
+
+        // --- 5. En passant ---
+        self.en_passant_sq = if parts[3] == "-" {
+            None
+        } else {
+            Some(Self::algebraic_to_index(parts[3]))
+        };
+
+        // ignoring halfmove + fullmove for now
+    }
+
+    fn algebraic_to_index(sq: &str) -> usize {
+        let bytes = sq.as_bytes();
+
+        let file = (bytes[0] - b'a') as usize;
+        let rank = (bytes[1] - b'1') as usize;
+
+        // convert to your indexing (0 = a8)
+        (7 - rank) * 8 + file
+    }
+
     pub fn setup_board(&mut self) {
         // Pawns
         for col in 0..self.board.get_size() {
