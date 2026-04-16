@@ -26,8 +26,8 @@ pub struct Game {
     // redo_list: Vec<Move>,
 }
 
-const WK_START_POS: usize = 3;
-const BK_START_POS: usize = 59;
+const WK_START_POS: usize = 60;
+const BK_START_POS: usize = 4;
 
 impl Game {
     pub fn new(size: usize) -> Self {
@@ -118,7 +118,13 @@ impl Game {
                     };
 
                     let piece = match ch.to_ascii_lowercase() {
-                        'k' => Piece::King(color),
+                        'k' => {
+                            match color {
+                                PieceColor::White => self.king_pos.white = idx,
+                                PieceColor::Black => self.king_pos.black = idx,
+                            }
+                            Piece::King(color)
+                        }
                         'q' => Piece::Queen(color),
                         'r' => Piece::Rook(color),
                         'b' => Piece::Bishop(color),
@@ -133,7 +139,7 @@ impl Game {
             }
         }
 
-        // --- 3. Side to move ---
+        // 3. Side to move
         let color = match parts[1] {
             "w" => PieceColor::White,
             "b" => PieceColor::Black,
@@ -145,7 +151,7 @@ impl Game {
             None => unreachable!("if reacheched, check load_fen"),
         };
 
-        // --- 4. Castling rights ---
+        // 4. Castling rights
         self.castling.remove(WK | WQ | BK | BQ); // however you store it
 
         if parts[2] != "-" {
@@ -160,7 +166,7 @@ impl Game {
             }
         }
 
-        // --- 5. En passant ---
+        // 5. En passant
         self.en_passant_sq = if parts[3] == "-" {
             None
         } else {
@@ -168,6 +174,9 @@ impl Game {
         };
 
         // ignoring halfmove + fullmove for now
+
+        println!("{:?}", self.cur_player);
+        self.generate_moves();
     }
 
     fn algebraic_to_index(sq: &str) -> usize {
@@ -181,44 +190,7 @@ impl Game {
     }
 
     pub fn setup_board(&mut self) {
-        // Pawns
-        for col in 0..self.board.get_size() {
-            let col = col as i32;
-
-            let white_pawn = self.board.idx(1, col);
-            let black_pawn = self.board().idx((self.board().get_size() - 2) as i32, col);
-
-            self.set(white_pawn, Piece::Pawn(PieceColor::White));
-            self.set(black_pawn, Piece::Pawn(PieceColor::Black));
-        }
-
-        // Back rank (order matters)
-        let back_rank = [
-            Piece::Rook,
-            Piece::Knight,
-            Piece::Bishop,
-            Piece::King,
-            Piece::Queen,
-            Piece::Bishop,
-            Piece::Knight,
-            Piece::Rook,
-        ];
-
-        for (col, kind) in back_rank.iter().enumerate() {
-            let col = col as i32;
-
-            let white_pos = self.board.idx(0, col);
-            let black_pos = self.board().idx((self.board().get_size() - 1) as i32, col);
-
-            self.set(white_pos, kind(PieceColor::White));
-            self.set(black_pos, kind(PieceColor::Black));
-        }
-
-        self.king_pos.white = 3;
-        self.king_pos.black = 59;
-
-        // generate moves after placing the pieces
-        self.generate_moves();
+        self.load_fen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
     }
 
     fn is_valid_step(from: i32, to: i32, dir: i32) -> bool {
@@ -263,7 +235,12 @@ impl Game {
 
                 let square = board.peek(new_pos as usize);
                 match square {
-                    Square::Empty => moves.push(Move::new(pos, new_pos as usize, self.castling, self.en_passant_sq)),
+                    Square::Empty => moves.push(Move::new(
+                        pos,
+                        new_pos as usize,
+                        self.castling,
+                        self.en_passant_sq,
+                    )),
                     Square::Occupied(opp_piece) => {
                         if piece.color() != opp_piece.color() {
                             moves.push(
@@ -293,25 +270,30 @@ impl Game {
         let rank = pos / 8;
 
         let (forward, start_rank, captures) = match pawn.color() {
-            PieceColor::White => (8, 1, [7, 9]),
-            PieceColor::Black => (-8, 6, [-7, -9]),
+            PieceColor::Black => (8, 1, [7, 9]),
+            PieceColor::White => (-8, 6, [-7, -9]),
         };
 
         // 1. Single forward movement
         let one = pos + forward;
         if one >= 0 && one < 64 {
             if matches!(self.board.peek(one as usize), Square::Empty) {
-                let mut cur_move = Move::new(pos as usize, one as usize, self.castling, self.en_passant_sq);
+                let mut cur_move = Move::new(
+                    pos as usize,
+                    one as usize,
+                    self.castling,
+                    self.en_passant_sq,
+                );
 
                 // Checking if it is the promotion square
                 match pawn.color() {
                     PieceColor::White => {
-                        if self.row(one as usize) == 7 {
+                        if self.row(one as usize) == 0 {
                             cur_move.promote_to(Piece::Queen(PieceColor::White));
                         }
                     }
                     PieceColor::Black => {
-                        if self.row(one as usize) == 0 {
+                        if self.row(one as usize) == 7 {
                             cur_move.promote_to(Piece::Queen(PieceColor::Black));
                         }
                     }
@@ -325,7 +307,12 @@ impl Game {
                         && two < 64
                         && matches!(self.board.peek(two as usize), Square::Empty)
                     {
-                        moves.push(Move::new(pos as usize, two as usize, self.castling, self.en_passant_sq));
+                        moves.push(Move::new(
+                            pos as usize,
+                            two as usize,
+                            self.castling,
+                            self.en_passant_sq,
+                        ));
                     }
                 }
             }
@@ -351,18 +338,23 @@ impl Game {
             match square {
                 Square::Occupied(opp_piece) => {
                     if opp_piece.color() != pawn.color() {
-                        let mut cur_move = Move::new(pos as usize, target as usize, self.castling, self.en_passant_sq)
-                            .with_capture(*opp_piece);
+                        let mut cur_move = Move::new(
+                            pos as usize,
+                            target as usize,
+                            self.castling,
+                            self.en_passant_sq,
+                        )
+                        .with_capture(*opp_piece);
 
                         // Checking if it is the promotion square
                         match pawn.color() {
                             PieceColor::White => {
-                                if self.row(one as usize) == 7 {
+                                if self.row(one as usize) == 0 {
                                     cur_move.promote_to(Piece::Queen(PieceColor::White));
                                 }
                             }
                             PieceColor::Black => {
-                                if self.row(one as usize) == 0 {
+                                if self.row(one as usize) == 7 {
                                     cur_move.promote_to(Piece::Queen(PieceColor::Black));
                                 }
                             }
@@ -377,7 +369,9 @@ impl Game {
         // 4. en passant
         if let Some(sq) = self.en_passant_sq {
             if captures.iter().any(|dir| dir + pos == sq as i32) {
-                moves.push(Move::new(pos as usize, sq, self.castling, self.en_passant_sq).with_enpassant());
+                moves.push(
+                    Move::new(pos as usize, sq, self.castling, self.en_passant_sq).with_enpassant(),
+                );
             }
         }
 
@@ -438,8 +432,8 @@ impl Game {
         let file = pos % 8;
 
         let captures = match pawn.color() {
-            PieceColor::White => [7, 9],
-            PieceColor::Black => [-7, -9],
+            PieceColor::Black => [7, 9],
+            PieceColor::White => [-7, -9],
         };
 
         // 3. Captures
@@ -545,8 +539,8 @@ impl Game {
 
         // Pawns
         let pawn_dirs = match cur {
-            PieceColor::White => [7, 9],
-            PieceColor::Black => [-7, -9],
+            PieceColor::Black => [7, 9],
+            PieceColor::White => [-7, -9],
         };
 
         // if cur is white, check the bottom diags, cuz that is where that an opp
@@ -613,11 +607,11 @@ impl Game {
 
         start_pos == k_pos
             && !self.attack_map[k_pos]
-            && self.board.peek(k_pos - 1) == &Square::Empty
-            && self.board.peek(k_pos - 2) == &Square::Empty
-            && self.board.peek(k_pos - 3) == &Square::Occupied(Piece::Rook(color))
-            && !self.attack_map[k_pos - 1]
-            && !self.attack_map[k_pos - 2]
+            && self.board.peek(k_pos + 1) == &Square::Empty
+            && self.board.peek(k_pos + 2) == &Square::Empty
+            && self.board.peek(k_pos + 3) == &Square::Occupied(Piece::Rook(color))
+            && !self.attack_map[k_pos + 1]
+            && !self.attack_map[k_pos + 2]
     }
 
     fn can_castle_queenside(&self, k_pos: usize, color: PieceColor) -> bool {
@@ -634,11 +628,11 @@ impl Game {
 
         start_pos == k_pos
             && !self.attack_map[k_pos]
-            && self.board.peek(k_pos + 1) == &Square::Empty
-            && self.board.peek(k_pos + 2) == &Square::Empty
-            && self.board.peek(k_pos + 4) == &Square::Occupied(Piece::Rook(color))
-            && !self.attack_map[k_pos + 1]
-            && !self.attack_map[k_pos + 2]
+            && self.board.peek(k_pos - 1) == &Square::Empty
+            && self.board.peek(k_pos - 2) == &Square::Empty
+            && self.board.peek(k_pos - 4) == &Square::Occupied(Piece::Rook(color))
+            && !self.attack_map[k_pos - 1]
+            && !self.attack_map[k_pos - 2]
     }
 
     fn gen_castling_moves(&mut self) {
@@ -652,8 +646,10 @@ impl Game {
                 let k_pos = self.king_pos.white;
 
                 if self.can_castle_kingside(k_pos, PieceColor::White) {
-                    self.legal_moves
-                        .push(Move::new(k_pos, k_pos - 2, self.castling, self.en_passant_sq).with_castle_king());
+                    self.legal_moves.push(
+                        Move::new(k_pos, k_pos + 2, self.castling, self.en_passant_sq)
+                            .with_castle_king(),
+                    );
                 }
 
                 // cheking castling possibility for white queen side
@@ -662,8 +658,10 @@ impl Game {
                 }
 
                 if self.can_castle_queenside(k_pos, PieceColor::White) {
-                    self.legal_moves
-                        .push(Move::new(k_pos, k_pos + 2, self.castling, self. en_passant_sq).with_castle_queen());
+                    self.legal_moves.push(
+                        Move::new(k_pos, k_pos - 2, self.castling, self.en_passant_sq)
+                            .with_castle_queen(),
+                    );
                 }
             }
 
@@ -676,8 +674,10 @@ impl Game {
                 let k_pos = self.king_pos.black;
 
                 if self.can_castle_kingside(k_pos, PieceColor::Black) {
-                    self.legal_moves
-                        .push(Move::new(k_pos, k_pos - 2, self.castling, self.en_passant_sq).with_castle_king());
+                    self.legal_moves.push(
+                        Move::new(k_pos, k_pos + 2, self.castling, self.en_passant_sq)
+                            .with_castle_king(),
+                    );
                 }
 
                 // cheking castling possibility for black queen side
@@ -686,8 +686,10 @@ impl Game {
                 }
 
                 if self.can_castle_queenside(k_pos, PieceColor::Black) {
-                    self.legal_moves
-                        .push(Move::new(k_pos, k_pos + 2, self.castling, self.en_passant_sq).with_castle_queen());
+                    self.legal_moves.push(
+                        Move::new(k_pos, k_pos - 2, self.castling, self.en_passant_sq)
+                            .with_castle_queen(),
+                    );
                 }
             }
         }
@@ -743,13 +745,19 @@ impl Game {
         match self.cur_player.color {
             PieceColor::White => {
                 if self.castling.white_kingside() {
-                    if mov.from == 3 || mov.from == 0 || mov.to == 0 {
+                    if mov.from == WK_START_POS
+                        || mov.from == WK_START_POS + 3
+                        || mov.to == WK_START_POS + 3
+                    {
                         self.castling.remove(WK);
                     }
                 }
 
                 if self.castling.white_queenside() {
-                    if mov.from == 3 || mov.from == 7 || mov.to == 7 {
+                    if mov.from == WK_START_POS
+                        || mov.from == WK_START_POS - 4
+                        || mov.to == WK_START_POS - 4
+                    {
                         self.castling.remove(WQ);
                     }
                 }
@@ -757,13 +765,19 @@ impl Game {
 
             PieceColor::Black => {
                 if self.castling.black_kingside() {
-                    if mov.from == 59 || mov.from == 56 || mov.to == 56 {
+                    if mov.from == BK_START_POS
+                        || mov.from == BK_START_POS + 3
+                        || mov.to == BK_START_POS + 3
+                    {
                         self.castling.remove(BK);
                     }
                 }
 
                 if self.castling.black_queenside() {
-                    if mov.from == 59 || mov.from == 63 || mov.to == 63 {
+                    if mov.from == BK_START_POS
+                        || mov.from == BK_START_POS - 4
+                        || mov.to == BK_START_POS - 4
+                    {
                         self.castling.remove(BQ);
                     }
                 }
@@ -837,10 +851,20 @@ impl Game {
                 if let Square::Occupied(Piece::King(color)) = square {
                     match color {
                         PieceColor::White => {
-                            self.move_piece(&Move::new(0, 2, self.castling, self.en_passant_sq));
+                            self.move_piece(&Move::new(
+                                WK_START_POS + 3,
+                                WK_START_POS + 1,
+                                self.castling,
+                                self.en_passant_sq,
+                            ));
                         }
                         PieceColor::Black => {
-                            self.move_piece(&Move::new(56, 58, self.castling, self.en_passant_sq));
+                            self.move_piece(&Move::new(
+                                BK_START_POS + 3,
+                                BK_START_POS + 1,
+                                self.castling,
+                                self.en_passant_sq,
+                            ));
                         }
                     }
                 }
@@ -849,10 +873,20 @@ impl Game {
                 if let Square::Occupied(Piece::King(color)) = square {
                     match color {
                         PieceColor::White => {
-                            self.move_piece(&Move::new(7, 4, self.castling, self.en_passant_sq));
+                            self.move_piece(&Move::new(
+                                WK_START_POS - 4,
+                                WK_START_POS - 1,
+                                self.castling,
+                                self.en_passant_sq,
+                            ));
                         }
                         PieceColor::Black => {
-                            self.move_piece(&Move::new(63, 60, self.castling, self.en_passant_sq));
+                            self.move_piece(&Move::new(
+                                BK_START_POS - 1,
+                                BK_START_POS - 1,
+                                self.castling,
+                                self.en_passant_sq,
+                            ));
                         }
                     }
                 }
@@ -887,11 +921,21 @@ impl Game {
                 if let Square::Occupied(Piece::King(color)) = square {
                     match color {
                         PieceColor::White => {
-                            self.move_piece(&Move::new(2, 0, self.castling, self.en_passant_sq));
+                            self.move_piece(&Move::new(
+                                WK_START_POS + 1,
+                                WK_START_POS + 3,
+                                self.castling,
+                                self.en_passant_sq,
+                            ));
                             self.castling.add(WK);
                         }
                         PieceColor::Black => {
-                            self.move_piece(&Move::new(58, 56, self.castling, self.en_passant_sq));
+                            self.move_piece(&Move::new(
+                                BK_START_POS + 1,
+                                BK_START_POS + 3,
+                                self.castling,
+                                self.en_passant_sq,
+                            ));
                             self.castling.add(BK);
                         }
                     }
@@ -901,11 +945,21 @@ impl Game {
                 if let Square::Occupied(Piece::King(color)) = square {
                     match color {
                         PieceColor::White => {
-                            self.move_piece(&Move::new(4, 7, self.castling, self.en_passant_sq));
+                            self.move_piece(&Move::new(
+                                WK_START_POS - 1,
+                                WK_START_POS - 4,
+                                self.castling,
+                                self.en_passant_sq,
+                            ));
                             self.castling.add(WQ);
                         }
                         PieceColor::Black => {
-                            self.move_piece(&Move::new(60, 63, self.castling, self.en_passant_sq));
+                            self.move_piece(&Move::new(
+                                BK_START_POS - 1,
+                                BK_START_POS - 4,
+                                self.castling,
+                                self.en_passant_sq,
+                            ));
                             self.castling.add(BQ);
                         }
                     }

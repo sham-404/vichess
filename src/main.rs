@@ -22,7 +22,6 @@ mod tests {
         let mut game = Game::new(8);
         game.load_fen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
         game.board().print_cli_board();
-
     }
 
     #[test]
