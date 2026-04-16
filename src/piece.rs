@@ -58,16 +58,18 @@ pub struct Move {
     pub capture: Option<Piece>,
     pub kind: MoveKind,
     pub prev_castle_rights: CastlingRights,
+    pub prev_en_passant_sq: Option<usize>,
 }
 
 impl Move {
-    pub fn new(from: usize, to: usize, castle: CastlingRights) -> Self {
+    pub fn new(from: usize, to: usize, castle: CastlingRights, enpassant: Option<usize>) -> Self {
         Self {
             from,
             to,
             capture: None,
             kind: MoveKind::Normal,
             prev_castle_rights: castle,
+            prev_en_passant_sq: enpassant,
         }
     }
 
