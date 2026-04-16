@@ -22,6 +22,7 @@ pub struct Game {
     legal_moves: Vec<Move>,
     attack_map: [bool; 64],
     castling: CastlingRights,
+    en_passant_sq: Option<usize>,
     // redo_list: Vec<Move>,
 }
 
@@ -48,6 +49,7 @@ impl Game {
             cur_player, // redo_list: Vec::new(),
             legal_moves: Vec::new(),
             attack_map: [false; 64],
+            en_passant_sq: None,
         };
         game.setup_board();
 
@@ -671,6 +673,15 @@ impl Game {
                     }
                 }
             }
+        }
+
+        // Handling enpassant square
+        let is_pawn = matches!(self.board.peek(mov.to), Square::Occupied(Piece::Pawn(_)));
+
+        if is_pawn && mov.from.abs_diff(mov.to) == 16 {
+            self.en_passant_sq = Some((mov.from + mov.to) / 2);
+        } else {
+            self.en_passant_sq = None;
         }
 
         self.update_king(from, to);
