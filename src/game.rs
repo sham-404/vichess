@@ -286,6 +286,13 @@ impl Game {
             }
         }
 
+        // 4. en passant
+        if let Some(sq) = self.en_passant_sq {
+            if captures.iter().any(|dir| dir + pos == sq as i32) {
+                moves.push(Move::new(pos as usize, sq, self.castling).with_enpassant());
+            }
+        }
+
         moves
     }
 
@@ -733,6 +740,7 @@ impl Game {
 
         // taking care of special moves
         match mov.kind {
+            MoveKind::Normal => {}
             MoveKind::Promotion(p) => {
                 self.board.place_piece(mov.to, p);
             }
@@ -760,7 +768,10 @@ impl Game {
                     }
                 }
             }
-            _ => {}
+            MoveKind::EnPassant => {
+                let captured_sq = (mov.from / 8) * 8 + (mov.to % 8);
+                self.board.place(Square::Empty, captured_sq);
+            }
         };
 
         // Post move activities
@@ -811,7 +822,16 @@ impl Game {
                     }
                 }
             }
-            _ => {}
+            MoveKind::EnPassant => {
+                if let Square::Occupied(Piece::Pawn(color)) = square {
+                    let captured_sq = (mov.from / 8) * 8 + (mov.to % 8);
+                    let captured_pawn = match color {
+                        PieceColor::White => Piece::Pawn(PieceColor::Black),
+                        PieceColor::Black => Piece::Pawn(PieceColor::White),
+                    };
+                    self.board.place_piece(captured_sq, captured_pawn);
+                }
+            }
         }
 
         self.update_king(mov.to, mov.from);

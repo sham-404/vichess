@@ -71,6 +71,11 @@ impl Move {
         }
     }
 
+    pub fn with_enpassant(mut self) -> Self {
+        self.kind = MoveKind::EnPassant;
+        self
+    }
+
     pub fn with_capture(mut self, piece: Piece) -> Self {
         self.capture = Some(piece);
         self
