@@ -62,34 +62,18 @@ impl GUI {
             _ => panic!("impossible, check draw_game_over()"),
         };
 
-        let width = screen_width();
-        let height = screen_height();
+        let base = screen_width().min(screen_height());
 
-        let pos_to_display = width.min(height) / 3.75 as f32;
-        let size_to_display = pos_to_display * 2 as f32;
+        let ui = UI::new(base / 3.75, base / 3.75, base / 1.875, base / 1.875);
 
-        draw_rectangle(
-            pos_to_display,
-            pos_to_display,
-            size_to_display,
-            size_to_display,
-            self.color.background,
-        );
+        ui.draw(self.color.background);
 
-        draw_text(
-            text,
-            pos_to_display + 55.0,
-            pos_to_display + 100.0,
-            50.0,
-            RED,
-        );
-        draw_text(
-            "Press R to restart",
-            pos_to_display + 50.0,
-            pos_to_display + 200.0,
-            30.0,
-            WHITE,
-        );
+        let title_size = ui.h * 0.16;
+        let subtitle_size = ui.h * 0.10;
+
+        ui.place_text(text, 0.5, 0.3, title_size, RED);
+        ui.place_text("Press R to restart", 0.5, 0.6, subtitle_size, WHITE);
+
         if is_key_pressed(KeyCode::R) {
             self.game.restart();
             self.state = GameState::Playing;
@@ -140,11 +124,13 @@ impl GUI {
     }
 
     pub fn draw_board(&mut self) {
-        let width = screen_width();
-        let height = screen_height();
+        let base = screen_width().min(screen_height());
 
-        self.tile_size = width.min(height) / self.game.get_size() as f32;
+        let board_ui = UI::new(0.0, 0.0, base, base);
 
+        self.tile_size = board_ui.w.min(board_ui.h) / self.game.get_size() as f32;
+
+        let size = self.game.get_size() as f32;
         // Draw Board states
         for (idx, _) in self.game.squares().iter().enumerate() {
             let (x, y) = self.game.board().get_xy(idx);
@@ -157,16 +143,12 @@ impl GUI {
                 }
             };
 
-            self.color_square(x, y, color);
+            let sq_ui = board_ui.child(x / size, y / size, 1.0 / size, 1.0 / size);
+            sq_ui.draw(color);
 
             // drawing index on each squares
-            draw_text(
-                idx.to_string().as_str(),
-                x as f32 * self.tile_size,
-                y as f32 * self.tile_size + 12.0,
-                12.0,
-                BLACK,
-            );
+            let idx_size = sq_ui.w * 0.2;
+            sq_ui.place_text(idx.to_string().as_str(), 0.1, 0.1, idx_size, BLACK);
         }
 
         // Drawing the last move on board
@@ -211,8 +193,13 @@ impl GUI {
     }
 
     fn draw_pieces(&self) {
+        let base = screen_width().min(screen_height());
+        let board_ui = UI::new(0.0, 0.0, base, base);
+        let size = self.game.get_size() as f32;
+
         for (idx, square) in self.game.squares().iter().enumerate() {
             let (x, y) = self.game.board().get_xy(idx);
+            let sq_ui = board_ui.child(x / size, y / size, 1.0 / size, 1.0 / size);
 
             // Drawing pieces
             if let Square::Occupied(piece) = square {
@@ -221,13 +208,7 @@ impl GUI {
                     PieceColor::Black => BLACK,
                 };
 
-                draw_text(
-                    &piece.get_name(),
-                    x as f32 * self.tile_size,
-                    y as f32 * self.tile_size + self.tile_size,
-                    64.0,
-                    color,
-                );
+                sq_ui.place_text(&piece.get_name(), 0.5, 0.75, sq_ui.w / 1.35, color);
             }
         }
     }
@@ -362,6 +343,47 @@ impl Theme {
             Theme::Dark => Theme::Classic,
             Theme::Classic => Theme::Blue,
             Theme::Blue => Theme::Matte,
+        }
+    }
+}
+
+struct UI {
+    x: f32,
+    y: f32,
+    w: f32,
+    h: f32,
+}
+
+impl UI {
+    fn new(x: f32, y: f32, w: f32, h: f32) -> Self {
+        Self { x, y, w, h }
+    }
+
+    fn place_text(&self, text: &str, x_ratio: f32, y_ratio: f32, font_size: f32, color: Color) {
+        // Convert ratios → actual position inside UI box
+        let target_x = self.x + self.w * x_ratio;
+        let target_y = self.y + self.h * y_ratio;
+
+        // Measure text for alignment
+        let dims = measure_text(text, None, font_size as u16, 1.0);
+
+        // Center align (both axes)
+        let draw_x = (target_x - dims.width / 2.0).floor();
+        let draw_y = (target_y + dims.height / 2.0).floor();
+
+        draw_text(text, draw_x, draw_y, font_size.round(), color);
+    }
+
+    fn draw(&self, color: Color) {
+        draw_rectangle(self.x, self.y, self.w, self.h, color);
+    }
+
+    fn child(&self, x_ratio: f32, y_ratio: f32, w_ratio: f32, h_ratio: f32) -> Self {
+        Self {
+            x: self.x + self.w * x_ratio,
+            y: self.y + self.h * y_ratio,
+            w: self.w * w_ratio,
+            h: self.h * h_ratio,
         }
     }
 }

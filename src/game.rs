@@ -174,8 +174,6 @@ impl Game {
         };
 
         // ignoring halfmove + fullmove for now
-
-        println!("{:?}", self.cur_player);
         self.generate_moves();
     }
 
@@ -588,9 +586,6 @@ impl Game {
 
         self.gen_castling_moves();
         self.filter_illegal();
-        if self.legal_moves.is_empty() {
-            println!("Pack it up buddy, you lost!");
-        }
     }
 
     fn can_castle_kingside(&self, k_pos: usize, color: PieceColor) -> bool {
