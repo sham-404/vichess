@@ -561,7 +561,20 @@ impl Game {
         false
     }
 
-    fn generate_moves(&mut self) {
+    pub fn in_check(&self, color: PieceColor) -> bool {
+        let king_pos = match color {
+            PieceColor::White => self.king_pos.white,
+            PieceColor::Black => self.king_pos.black,
+        };
+
+        if self.is_square_attacked(king_pos, color) {
+            return true;
+        }
+
+        false
+    }
+
+    fn generate_moves(&mut self) -> Vec<Move> {
         self.legal_moves.clear();
         self.attack_map = [false; 64];
 
@@ -586,6 +599,8 @@ impl Game {
 
         self.gen_castling_moves();
         self.filter_illegal();
+
+        return self.legal_moves.clone();
     }
 
     fn can_castle_kingside(&self, k_pos: usize, color: PieceColor) -> bool {
@@ -696,14 +711,8 @@ impl Game {
         for mov in moves {
             // move the piece
             self.move_piece(&mov);
-            let color = self.cur_player.color;
 
-            let king_pos = match self.cur_player.color {
-                PieceColor::White => self.king_pos.white,
-                PieceColor::Black => self.king_pos.black,
-            };
-
-            if !self.is_square_attacked(king_pos, color) {
+            if !self.in_check(self.cur_player.color) {
                 legal.push(mov);
             }
 
@@ -1002,6 +1011,106 @@ impl Game {
         *self = Self::new(self.get_size());
     }
 
+    #[allow(dead_code)]
+    pub fn perft(&mut self, depth: u32) -> u64 {
+        if depth == 0 {
+            return 1;
+        }
+
+        let moves = self.generate_moves();
+        let mut nodes = 0;
+
+        for mv in moves {
+            self.make_move(mv.from, mv.to);
+            nodes += self.perft(depth - 1);
+            self.undo_move();
+        }
+
+        nodes
+    }
+
+    #[allow(dead_code)]
+    pub fn perft_divide(&mut self, depth: u32) {
+        let moves = self.generate_moves();
+        let mut total = 0;
+
+        for mv in moves {
+            self.make_move(mv.from, mv.to);
+            let nodes = self.perft(depth - 1);
+            self.undo_move();
+
+            println!("{:?}: {}", mv, nodes);
+            total += nodes;
+        }
+
+        println!("Total nodes: {}", total);
+    }
+    #[allow(dead_code)]
+    pub fn perft_debug(&mut self, depth: u32) -> PerftStats {
+        if depth == 0 {
+            return PerftStats {
+                nodes: 1,
+                ..Default::default()
+            };
+        }
+
+        let moves = self.generate_moves();
+        let mut total = PerftStats::default();
+
+        for mv in moves {
+            self.make_move(mv.from, mv.to);
+
+            // recurse
+            let mut child = self.perft_debug(depth - 1);
+
+            // count this move (only at depth 1 OR always depending on style)
+            if depth == 1 {
+                child.nodes = 1;
+
+                if mv.capture.is_some() {
+                    child.captures += 1;
+                }
+
+                if mv.kind == MoveKind::EnPassant {
+                    child.en_passant += 1;
+                }
+
+                if mv.kind == MoveKind::CastleKing || mv.kind == MoveKind::CastleQueen {
+                    child.castles += 1;
+                }
+
+                if let MoveKind::Promotion(_) = mv.kind {
+                    child.promotions += 1;
+                }
+
+                // check detection AFTER move
+                if self.in_check(self.cur_player.color) {
+                    child.checks += 1;
+                }
+
+                // checkmate detection
+                let moves_after = self.generate_moves();
+                if moves_after.is_empty() && self.in_check(self.cur_player.color) {
+                    child.checkmates += 1;
+                }
+            }
+
+            self.undo_move();
+
+            // accumulate
+            total.nodes += child.nodes;
+            total.captures += child.captures;
+            total.en_passant += child.en_passant;
+            total.castles += child.castles;
+            total.promotions += child.promotions;
+            total.checks += child.checks;
+            total.discovered_checks += child.discovered_checks;
+            total.double_checks += child.double_checks;
+            total.checkmates += child.checkmates;
+        }
+
+        total
+    }
     fn set(&mut self, idx: usize, piece: Piece) {
         self.board.place_piece(idx, piece);
     }
@@ -1070,4 +1179,17 @@ impl CastlingRights {
     pub fn add(&mut self, mask: u8) {
         self.0 |= mask;
     }
+}
+
+#[derive(Default, Debug, Clone, Copy)]
+pub struct PerftStats {
+    pub nodes: u64,
+    pub captures: u64,
+    pub en_passant: u64,
+    pub castles: u64,
+    pub promotions: u64,
+    pub checks: u64,
+    pub discovered_checks: u64,
+    pub double_checks: u64,
+    pub checkmates: u64,
 }
