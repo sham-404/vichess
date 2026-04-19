@@ -1,4 +1,5 @@
 use crate::{game::Square, piece::Piece};
+use macroquad::prelude::*;
 
 #[derive(Debug, Clone)]
 pub struct Board {

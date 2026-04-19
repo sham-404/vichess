@@ -99,7 +99,6 @@ impl Move {
 }
 
 #[derive(PartialEq, Eq, Debug, Clone, Copy)]
-#[allow(dead_code)]
 pub enum MoveKind {
     Normal,
     CastleKing,

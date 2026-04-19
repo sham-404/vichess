@@ -102,6 +102,7 @@ impl Game {
         let mut idx = 0;
 
         for ch in parts[0].chars() {
+            println!("{}", ch);
             match ch {
                 '/' => continue,
 
@@ -126,7 +127,10 @@ impl Game {
                             Piece::King(color)
                         }
                         'q' => Piece::Queen(color),
-                        'r' => Piece::Rook(color),
+                        'r' => {
+                            println!("hi");
+                            Piece::Rook(color)
+                        }
                         'b' => Piece::Bishop(color),
                         'n' => Piece::Knight(color),
                         'p' => Piece::Pawn(color),
@@ -360,16 +364,18 @@ impl Game {
                         moves.push(cur_move);
                     }
                 }
-                _ => continue,
-            }
-        }
 
-        // 4. en passant
-        if let Some(sq) = self.en_passant_sq {
-            if captures.iter().any(|dir| dir + pos == sq as i32) {
-                moves.push(
-                    Move::new(pos as usize, sq, self.castling, self.en_passant_sq).with_enpassant(),
-                );
+                // if target square is empty, check for en passant possibility
+                Square::Empty => {
+                    if let Some(sq) = self.en_passant_sq {
+                        if sq as i32 == target {
+                            moves.push(
+                                Move::new(pos as usize, sq, self.castling, self.en_passant_sq)
+                                    .with_enpassant(),
+                            );
+                        }
+                    }
+                }
             }
         }
 
@@ -640,6 +646,7 @@ impl Game {
             && !self.attack_map[k_pos]
             && self.board.peek(k_pos - 1) == &Square::Empty
             && self.board.peek(k_pos - 2) == &Square::Empty
+            && self.board.peek(k_pos - 3) == &Square::Empty
             && self.board.peek(k_pos - 4) == &Square::Occupied(Piece::Rook(color))
             && !self.attack_map[k_pos - 1]
             && !self.attack_map[k_pos - 2]
@@ -649,57 +656,49 @@ impl Game {
         match self.cur_player.color {
             PieceColor::White => {
                 // cheking castling possibility for white king side
-                if !self.castling.white_kingside() {
-                    return;
-                }
-
                 let k_pos = self.king_pos.white;
 
-                if self.can_castle_kingside(k_pos, PieceColor::White) {
-                    self.legal_moves.push(
-                        Move::new(k_pos, k_pos + 2, self.castling, self.en_passant_sq)
-                            .with_castle_king(),
-                    );
+                if self.castling.white_kingside() {
+                    if self.can_castle_kingside(k_pos, PieceColor::White) {
+                        self.legal_moves.push(
+                            Move::new(k_pos, k_pos + 2, self.castling, self.en_passant_sq)
+                                .with_castle_king(),
+                        );
+                    }
                 }
 
                 // cheking castling possibility for white queen side
-                if !self.castling.white_queenside() {
-                    return;
-                }
-
-                if self.can_castle_queenside(k_pos, PieceColor::White) {
-                    self.legal_moves.push(
-                        Move::new(k_pos, k_pos - 2, self.castling, self.en_passant_sq)
-                            .with_castle_queen(),
-                    );
+                if self.castling.white_queenside() {
+                    if self.can_castle_queenside(k_pos, PieceColor::White) {
+                        self.legal_moves.push(
+                            Move::new(k_pos, k_pos - 2, self.castling, self.en_passant_sq)
+                                .with_castle_queen(),
+                        );
+                    }
                 }
             }
 
             PieceColor::Black => {
                 // cheking castling possibility for black king side
-                if !self.castling.black_kingside() {
-                    return;
-                }
-
                 let k_pos = self.king_pos.black;
 
-                if self.can_castle_kingside(k_pos, PieceColor::Black) {
-                    self.legal_moves.push(
-                        Move::new(k_pos, k_pos + 2, self.castling, self.en_passant_sq)
-                            .with_castle_king(),
-                    );
+                if self.castling.black_kingside() {
+                    if self.can_castle_kingside(k_pos, PieceColor::Black) {
+                        self.legal_moves.push(
+                            Move::new(k_pos, k_pos + 2, self.castling, self.en_passant_sq)
+                                .with_castle_king(),
+                        );
+                    }
                 }
 
                 // cheking castling possibility for black queen side
-                if !self.castling.black_queenside() {
-                    return;
-                }
-
-                if self.can_castle_queenside(k_pos, PieceColor::Black) {
-                    self.legal_moves.push(
-                        Move::new(k_pos, k_pos - 2, self.castling, self.en_passant_sq)
-                            .with_castle_queen(),
-                    );
+                if self.castling.black_queenside() {
+                    if self.can_castle_queenside(k_pos, PieceColor::Black) {
+                        self.legal_moves.push(
+                            Move::new(k_pos, k_pos - 2, self.castling, self.en_passant_sq)
+                                .with_castle_queen(),
+                        );
+                    }
                 }
             }
         }
@@ -746,45 +745,63 @@ impl Game {
         // Post move activities
 
         // Handling castling rights
-        match self.cur_player.color {
-            PieceColor::White => {
-                if self.castling.white_kingside() {
-                    if mov.from == WK_START_POS
-                        || mov.from == WK_START_POS + 3
-                        || mov.to == WK_START_POS + 3
-                    {
-                        self.castling.remove(WK);
-                    }
-                }
+        // piece that moved (after move is applied)
+        let moved_piece = self.board.peek(mov.to);
 
-                if self.castling.white_queenside() {
-                    if mov.from == WK_START_POS
-                        || mov.from == WK_START_POS - 4
-                        || mov.to == WK_START_POS - 4
-                    {
-                        self.castling.remove(WQ);
-                    }
-                }
+        // KING MOVES
+        if matches!(
+            moved_piece,
+            Square::Occupied(Piece::King(PieceColor::White))
+        ) {
+            self.castling.remove(WK | WQ);
+        }
+
+        if matches!(
+            moved_piece,
+            Square::Occupied(Piece::King(PieceColor::Black))
+        ) {
+            self.castling.remove(BK | BQ);
+        }
+
+        // ROOK MOVES (from starting squares)
+        if matches!(
+            moved_piece,
+            Square::Occupied(Piece::Rook(PieceColor::White))
+        ) {
+            if mov.from == WK_START_POS + 3 {
+                self.castling.remove(WK); // h1
+            } else if mov.from == WK_START_POS - 4 {
+                self.castling.remove(WQ); // a1
             }
+        }
 
-            PieceColor::Black => {
-                if self.castling.black_kingside() {
-                    if mov.from == BK_START_POS
-                        || mov.from == BK_START_POS + 3
-                        || mov.to == BK_START_POS + 3
-                    {
-                        self.castling.remove(BK);
-                    }
-                }
+        if matches!(
+            moved_piece,
+            Square::Occupied(Piece::Rook(PieceColor::Black))
+        ) {
+            if mov.from == BK_START_POS + 3 {
+                self.castling.remove(BK); // h8
+            } else if mov.from == BK_START_POS - 4 {
+                self.castling.remove(BQ); // a8
+            }
+        }
 
-                if self.castling.black_queenside() {
-                    if mov.from == BK_START_POS
-                        || mov.from == BK_START_POS - 4
-                        || mov.to == BK_START_POS - 4
-                    {
-                        self.castling.remove(BQ);
-                    }
+        // ROOK CAPTURED
+        if let Some(Piece::Rook(color)) = mov.capture {
+            match (color, mov.to) {
+                (PieceColor::White, sq) if sq == WK_START_POS + 3 => {
+                    self.castling.remove(WK);
                 }
+                (PieceColor::White, sq) if sq == WK_START_POS - 4 => {
+                    self.castling.remove(WQ);
+                }
+                (PieceColor::Black, sq) if sq == BK_START_POS + 3 => {
+                    self.castling.remove(BK);
+                }
+                (PieceColor::Black, sq) if sq == BK_START_POS - 4 => {
+                    self.castling.remove(BQ);
+                }
+                _ => {}
             }
         }
 
@@ -844,6 +861,10 @@ impl Game {
 
         let square = std::mem::replace(square, Square::Empty);
         self.board.place(square, mov.to);
+
+        if mov.from == 0 {
+            println!("Hi, {:#?}", mov);
+        }
 
         // taking care of special moves
         match mov.kind {
@@ -1032,19 +1053,42 @@ impl Game {
     #[allow(dead_code)]
     pub fn perft_divide(&mut self, depth: u32) {
         let moves = self.generate_moves();
-        let mut total = 0;
+        let mut total_nodes = 0;
 
         for mv in moves {
             self.make_move(mv.from, mv.to);
-            let nodes = self.perft(depth - 1);
+
+            let stats = self.perft_debug(depth - 1);
+
             self.undo_move();
 
-            println!("{:?}: {}", mv, nodes);
-            total += nodes;
+            total_nodes += stats.nodes;
+
+            // print move + nodes
+            println!("{}: {}", self.move_to_string(&mv), stats.nodes);
         }
 
-        println!("Total nodes: {}", total);
+        println!("\nTotal nodes: {}", total_nodes);
     }
+
+    fn move_to_string(&self, mv: &Move) -> String {
+        format!(
+            "{}{}",
+            self.square_to_string(mv.from),
+            self.square_to_string(mv.to)
+        )
+    }
+
+    fn square_to_string(&self, sq: usize) -> String {
+        let file = (sq % 8) as u8;
+        let rank = (sq / 8) as u8;
+
+        let file_char = (b'a' + file) as char;
+        let rank_char = (b'1' + (7 - rank)) as char; // adjust if your board is flipped
+
+        format!("{}{}", file_char, rank_char)
+    }
+
     #[allow(dead_code)]
     pub fn perft_debug(&mut self, depth: u32) -> PerftStats {
         if depth == 0 {
@@ -1073,6 +1117,7 @@ impl Game {
 
                 if mv.kind == MoveKind::EnPassant {
                     child.en_passant += 1;
+                    child.captures += 1;
                 }
 
                 if mv.kind == MoveKind::CastleKing || mv.kind == MoveKind::CastleQueen {
