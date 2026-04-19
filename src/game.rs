@@ -102,7 +102,6 @@ impl Game {
         let mut idx = 0;
 
         for ch in parts[0].chars() {
-            println!("{}", ch);
             match ch {
                 '/' => continue,
 
@@ -127,10 +126,7 @@ impl Game {
                             Piece::King(color)
                         }
                         'q' => Piece::Queen(color),
-                        'r' => {
-                            println!("hi");
-                            Piece::Rook(color)
-                        }
+                        'r' => Piece::Rook(color),
                         'b' => Piece::Bishop(color),
                         'n' => Piece::Knight(color),
                         'p' => Piece::Pawn(color),
@@ -862,10 +858,6 @@ impl Game {
         let square = std::mem::replace(square, Square::Empty);
         self.board.place(square, mov.to);
 
-        if mov.from == 0 {
-            println!("Hi, {:#?}", mov);
-        }
-
         // taking care of special moves
         match mov.kind {
             MoveKind::Normal => {}
@@ -907,7 +899,7 @@ impl Game {
                         }
                         PieceColor::Black => {
                             self.move_piece(&Move::new(
-                                BK_START_POS - 1,
+                                BK_START_POS - 4,
                                 BK_START_POS - 1,
                                 self.castling,
                                 self.en_passant_sq,

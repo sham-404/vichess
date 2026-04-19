@@ -21,14 +21,14 @@ pub async fn run_app() {
 pub fn debug_app(fen: &str, depth: u32) {
     let mut game = Game::new(8);
     game.load_fen(fen);
-    game.perft_divide(depth);
+    print!("perft: {}: {:#?}", depth, game.perft_debug(depth));
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
 
-    const FEN: &str = "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/2KR3R b Kkq -";
+    const FEN: &str = "r4rk1/1pp1qppp/p1np1n2/2b1p1B1/2B1P1b1/P1NP1N2/1PP1QPPP/R4RK1 w - - 0 10 ";
 
     #[test]
     fn perft_1d() {
